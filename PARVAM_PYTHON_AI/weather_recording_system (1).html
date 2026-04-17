@@ -1,0 +1,886 @@
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@400;700;800&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --sky1:#0ea5e9;--sky2:#38bdf8;--sun:#f59e0b;--rain:#3b82f6;--cloud:#94a3b8;
+    --bg:#f0f9ff;--card:#fff;--text:#0f172a;--muted:#64748b;--border:#e2e8f0;
+    --danger:#ef4444;--success:#10b981;--purple:#8b5cf6;--teal:#14b8a6;
+    --grad1:linear-gradient(135deg,#0ea5e9,#8b5cf6);
+    --grad2:linear-gradient(135deg,#f59e0b,#ef4444);
+    --grad3:linear-gradient(135deg,#10b981,#0ea5e9);
+  }
+  body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+  .app{min-height:100vh;display:flex;flex-direction:column}
+
+  /* TOP NAV */
+  .topnav{background:linear-gradient(135deg,#0f172a,#1e293b);padding:0 2rem;display:flex;align-items:center;gap:2rem;height:64px;position:sticky;top:0;z-index:100;box-shadow:0 4px 20px rgba(0,0,0,.3)}
+  .brand{font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800;color:#fff;display:flex;align-items:center;gap:8px;white-space:nowrap}
+  .brand-icon{font-size:1.5rem}
+  .nav-tabs{display:flex;gap:4px;flex:1}
+  .nav-tab{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;border:none;background:transparent;color:#94a3b8;transition:all .2s;white-space:nowrap}
+  .nav-tab.active{background:rgba(14,165,233,.2);color:#38bdf8;border:1px solid rgba(14,165,233,.3)}
+  .nav-tab:hover:not(.active){background:rgba(255,255,255,.07);color:#fff}
+  .user-pill{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.08);border-radius:24px;padding:6px 14px 6px 8px;cursor:pointer;transition:all .2s}
+  .user-pill:hover{background:rgba(255,255,255,.15)}
+  .avatar{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;background:var(--grad1)}
+  .user-name{font-size:13px;color:#e2e8f0;font-weight:500}
+
+  /* PAGES */
+  .page{display:none;padding:2rem;max-width:1400px;margin:0 auto;width:100%}
+  .page.active{display:block}
+
+  /* AUTH */
+  .auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;gap:4rem;padding:2rem;flex-wrap:wrap;background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 50%,#0f172a 100%);position:relative;overflow:hidden}
+  .auth-info { color: #fff; max-width: 450px; z-index: 1; padding: 2rem; }
+  .auth-info h1 { font-family: 'Syne', sans-serif; font-size: 3rem; font-weight: 800; margin-bottom: 1rem; line-height: 1.2; }
+  .auth-info p { color: #94a3b8; font-size: 1.1rem; line-height: 1.6; margin-bottom: 2rem; }
+  .auth-images { display: flex; gap: 1rem; }
+  .auth-images img { width: 140px; height: 140px; border-radius: 16px; object-fit: cover; border: 2px solid rgba(255,255,255,0.1); box-shadow: 0 8px 32px rgba(0,0,0,0.2); }
+  @media(max-width: 800px) { .auth-info { display: none; } .auth-wrap { gap: 2rem; } }
+  .auth-bg{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+  .auth-blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.3}
+  .auth-card{background:rgba(255,255,255,.05);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.1);border-radius:24px;padding:2.5rem;width:100%;max-width:440px;position:relative;z-index:1}
+  .auth-logo{text-align:center;margin-bottom:2rem}
+  .auth-logo .icon{font-size:3rem;display:block;margin-bottom:.5rem}
+  .auth-logo h1{font-family:'Syne',sans-serif;font-size:1.8rem;font-weight:800;color:#fff;margin-bottom:.25rem}
+  .auth-logo p{color:#94a3b8;font-size:.9rem}
+  .auth-tabs{display:flex;background:rgba(0,0,0,.3);border-radius:12px;padding:4px;margin-bottom:1.5rem}
+  .auth-tab{flex:1;text-align:center;padding:8px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:500;color:#94a3b8;transition:all .2s}
+  .auth-tab.active{background:var(--grad1);color:#fff}
+  .field{margin-bottom:1rem}
+  .field label{display:block;font-size:13px;color:#94a3b8;margin-bottom:6px;font-weight:500}
+  .field input,.field select{width:100%;padding:12px 16px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:12px;color:#fff;font-size:14px;outline:none;transition:all .2s;font-family:'Space Grotesk',sans-serif}
+  .field input:focus,.field select:focus{border-color:rgba(14,165,233,.5);background:rgba(14,165,233,.08)}
+  .field input::placeholder{color:#475569}
+  .field select option{background:#1e293b;color:#fff}
+  .btn-primary{width:100%;padding:13px;border-radius:12px;border:none;background:var(--grad1);color:#fff;font-size:15px;font-weight:600;cursor:pointer;transition:all .2s;font-family:'Space Grotesk',sans-serif;letter-spacing:.3px}
+  .btn-primary:hover{opacity:.9;transform:translateY(-1px)}
+  .btn-primary:active{transform:scale(.98)}
+  .auth-divider{text-align:center;color:#475569;font-size:13px;margin:.75rem 0}
+  .err-msg{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);color:#fca5a5;padding:10px 14px;border-radius:10px;font-size:13px;margin-bottom:1rem;display:none}
+
+  /* PAGE HEADERS */
+  .page-header{margin-bottom:2rem}
+  .page-header h2{font-family:'Syne',sans-serif;font-size:1.8rem;font-weight:800;color:var(--text);display:flex;align-items:center;gap:10px}
+  .page-header p{color:var(--muted);margin-top:.25rem;font-size:.95rem}
+
+  /* DASHBOARD CARDS */
+  .stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:2rem}
+  .stat-card{background:var(--card);border-radius:16px;padding:1.25rem;border:1px solid var(--border);position:relative;overflow:hidden;transition:transform .2s}
+  .stat-card:hover{transform:translateY(-2px)}
+  .stat-card .bg-icon{position:absolute;right:-10px;bottom:-10px;font-size:4rem;opacity:.08}
+  .stat-card .label{font-size:12px;color:var(--muted);font-weight:500;text-transform:uppercase;letter-spacing:.5px;margin-bottom:.5rem}
+  .stat-card .value{font-size:2rem;font-weight:700;font-family:'Syne',sans-serif;line-height:1}
+  .stat-card .sub{font-size:12px;color:var(--muted);margin-top:.25rem}
+  .stat-card.sky{background:linear-gradient(135deg,#0ea5e9,#38bdf8);color:#fff}
+  .stat-card.sky .label,.stat-card.sky .sub{color:rgba(255,255,255,.7)}
+  .stat-card.sun{background:linear-gradient(135deg,#f59e0b,#fbbf24);color:#fff}
+  .stat-card.sun .label,.stat-card.sun .sub{color:rgba(255,255,255,.7)}
+  .stat-card.rain{background:linear-gradient(135deg,#3b82f6,#6366f1);color:#fff}
+  .stat-card.rain .label,.stat-card.rain .sub{color:rgba(255,255,255,.7)}
+  .stat-card.green{background:linear-gradient(135deg,#10b981,#14b8a6);color:#fff}
+  .stat-card.green .label,.stat-card.green .sub{color:rgba(255,255,255,.7)}
+
+  /* CURRENT WEATHER HERO */
+  .weather-hero{background:linear-gradient(135deg,#0f172a,#1e3a5f,#0c4a6e);border-radius:24px;padding:2rem;margin-bottom:2rem;color:#fff;position:relative;overflow:hidden}
+  .weather-hero-bg{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+  .hero-blob{position:absolute;border-radius:50%;filter:blur(60px);opacity:.2}
+  .weather-hero-inner{position:relative;z-index:1;display:flex;flex-wrap:wrap;gap:2rem;align-items:center}
+  .hero-left{flex:1;min-width:220px}
+  .hero-location{font-size:.9rem;color:rgba(255,255,255,.6);margin-bottom:.5rem;display:flex;align-items:center;gap:6px}
+  .hero-temp{font-family:'Syne',sans-serif;font-size:5rem;font-weight:800;line-height:1}
+  .hero-condition{font-size:1.2rem;margin-top:.5rem;opacity:.8}
+  .hero-stats{display:flex;gap:1.5rem;margin-top:1rem;flex-wrap:wrap}
+  .hero-stat{text-align:center}
+  .hero-stat .hval{font-size:1.1rem;font-weight:700}
+  .hero-stat .hlbl{font-size:11px;opacity:.6;margin-top:2px}
+  .hero-right{flex:1;min-width:200px;text-align:center}
+  .weather-emoji-big{font-size:7rem;animation:float 3s ease-in-out infinite}
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+
+  /* GRID */
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:2rem}
+  .grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.5rem;margin-bottom:2rem}
+  @media(max-width:768px){.grid2,.grid3{grid-template-columns:1fr}}
+
+  /* CARDS */
+  .card{background:var(--card);border-radius:20px;padding:1.5rem;border:1px solid var(--border)}
+  .card-title{font-size:1rem;font-weight:700;margin-bottom:1.25rem;display:flex;align-items:center;gap:8px}
+  .card-title .icon{font-size:1.1rem}
+
+  /* FORM */
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:500px){.form-grid{grid-template-columns:1fr}}
+  .form-field{display:flex;flex-direction:column;gap:6px}
+  .form-field label{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  .form-field input,.form-field select{padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;outline:none;transition:all .2s;font-family:'Space Grotesk',sans-serif;background:#fff;color:var(--text)}
+  .form-field input:focus,.form-field select:focus{border-color:var(--sky1);box-shadow:0 0 0 3px rgba(14,165,233,.12)}
+  .btn-add{margin-top:1rem;width:100%;padding:12px;border-radius:12px;border:none;background:var(--grad1);color:#fff;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;font-family:'Space Grotesk',sans-serif}
+  .btn-add:hover{opacity:.9;transform:translateY(-1px)}
+
+  /* TABLE */
+  .table-wrap{overflow-x:auto;border-radius:12px;border:1px solid var(--border)}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{background:#f8fafc;padding:12px 16px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:600;border-bottom:1px solid var(--border)}
+  td{padding:12px 16px;border-bottom:1px solid #f1f5f9;color:var(--text)}
+  tr:last-child td{border-bottom:none}
+  tr:hover td{background:#f8fafc}
+  .hot-row td{background:#fff5f5}
+  .hot-row:hover td{background:#fee2e2}
+  .badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+  .badge.sunny{background:#fef3c7;color:#92400e}
+  .badge.rainy{background:#dbeafe;color:#1e40af}
+  .badge.cloudy{background:#f1f5f9;color:#475569}
+  .avg-tag{display:inline-block;background:var(--grad1);color:#fff;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600}
+
+  /* PREDICTION PAGE */
+  .pred-hero{background:linear-gradient(135deg,#4c1d95,#6d28d9,#7c3aed);border-radius:24px;padding:2rem;margin-bottom:2rem;color:#fff}
+  .pred-hero h3{font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:800;margin-bottom:.5rem}
+  .pred-hero p{opacity:.7;font-size:.9rem}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:1rem}
+  .cal-header{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px}
+  .cal-day-name{text-align:center;font-size:11px;font-weight:600;color:var(--muted);padding:4px}
+  .cal-cell{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:10px;cursor:pointer;border:1.5px solid var(--border);background:#fff;transition:all .2s;font-size:13px;font-weight:500;position:relative}
+  .cal-cell:hover{border-color:var(--sky1);background:#f0f9ff}
+  .cal-cell.selected{background:var(--grad1);color:#fff;border-color:transparent}
+  .cal-cell.today{border-color:var(--sky1);font-weight:700}
+  .cal-cell.empty{border:none;background:transparent;cursor:default}
+  .cal-cell.has-trip::after{content:'';position:absolute;bottom:4px;width:5px;height:5px;border-radius:50%;background:var(--sun)}
+  .pred-result{background:#fff;border-radius:16px;border:1px solid var(--border);overflow:hidden}
+  .pred-item{display:flex;align-items:center;gap:1rem;padding:1rem 1.25rem;border-bottom:1px solid #f1f5f9;transition:background .15s}
+  .pred-item:hover{background:#f8fafc}
+  .pred-item:last-child{border-bottom:none}
+  .pred-date{font-weight:700;font-size:14px;min-width:80px}
+  .pred-emoji{font-size:2rem}
+  .pred-temps{flex:1}
+  .pred-high{font-size:1.1rem;font-weight:700;color:var(--danger)}
+  .pred-low{font-size:.85rem;color:var(--muted)}
+  .pred-cond{font-size:12px;font-weight:600;color:var(--muted)}
+  .trip-btn{padding:6px 14px;border-radius:20px;border:none;background:var(--grad1);color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:'Space Grotesk',sans-serif;transition:all .2s}
+  .trip-btn:hover{opacity:.9}
+
+  /* TRIPS PAGE */
+  .trip-card{background:var(--card);border-radius:20px;border:1px solid var(--border);overflow:hidden;transition:transform .2s,box-shadow .2s}
+  .trip-card:hover{transform:translateY(-3px);box-shadow:0 12px 40px rgba(0,0,0,.1)}
+  .trip-header{height:120px;display:flex;align-items:center;justify-content:center;font-size:4rem;position:relative}
+  .trip-body{padding:1.25rem}
+  .trip-title{font-size:1.1rem;font-weight:700;margin-bottom:.5rem}
+  .trip-meta{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:4px}
+  .trip-meta span{display:flex;align-items:center;gap:6px}
+  .trip-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:.75rem}
+  .trip-tag{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600}
+  .trip-actions{display:flex;gap:8px;margin-top:1rem}
+  .btn-sm{padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:none;font-family:'Space Grotesk',sans-serif;transition:all .2s}
+  .btn-outline{background:transparent;border:1.5px solid var(--border);color:var(--text)}
+  .btn-outline:hover{background:#f1f5f9}
+  .btn-danger{background:#fee2e2;color:#dc2626}
+  .btn-danger:hover{background:#fecaca}
+
+  /* TOAST */
+  .toast{position:fixed;bottom:2rem;right:2rem;background:#0f172a;color:#fff;padding:14px 20px;border-radius:14px;font-size:14px;font-weight:500;z-index:9999;transform:translateY(100px);opacity:0;transition:all .35s;box-shadow:0 8px 30px rgba(0,0,0,.3);display:flex;align-items:center;gap:10px;max-width:340px}
+  .toast.show{transform:translateY(0);opacity:1}
+
+  /* CHART CONTAINERS */
+  .chart-wrap{position:relative;width:100%;height:220px}
+
+  /* WEATHER SEARCH */
+  .search-bar{display:flex;gap:10px;margin-bottom:1.5rem}
+  .search-bar input{flex:1;padding:12px 16px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;outline:none;transition:all .2s;font-family:'Space Grotesk',sans-serif}
+  .search-bar input:focus{border-color:var(--sky1);box-shadow:0 0 0 3px rgba(14,165,233,.12)}
+  .search-bar button{padding:12px 20px;border-radius:12px;border:none;background:var(--grad1);color:#fff;font-weight:600;cursor:pointer;font-family:'Space Grotesk',sans-serif;transition:all .2s;white-space:nowrap}
+  .search-bar button:hover{opacity:.9}
+
+  /* 7DAY AVG PILL */
+  .avg-banner{background:linear-gradient(135deg,#ecfdf5,#d1fae5);border:1.5px solid #6ee7b7;border-radius:14px;padding:1rem 1.25rem;display:flex;align-items:center;gap:12px;margin-bottom:1.5rem}
+  .avg-banner .avg-icon{font-size:2rem}
+  .avg-banner .avg-num{font-family:'Syne',sans-serif;font-size:2rem;font-weight:800;color:#065f46}
+  .avg-banner .avg-lbl{font-size:13px;color:#065f46;font-weight:500}
+
+  /* TRIP MODAL (no fixed) */
+  .modal-overlay{display:none;position:absolute;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:flex-start;justify-content:center;padding-top:2rem}
+  .modal-overlay.open{display:flex}
+  .modal-box{background:#fff;border-radius:24px;padding:2rem;width:100%;max-width:480px;position:relative;border:1px solid var(--border)}
+  .modal-close{position:absolute;top:1rem;right:1rem;background:#f1f5f9;border:none;border-radius:8px;width:32px;height:32px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center}
+  .modal-title{font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800;margin-bottom:1.5rem}
+
+  .no-data{text-align:center;padding:3rem;color:var(--muted)}
+  .no-data .icon{font-size:3rem;margin-bottom:1rem}
+
+  .loading-pulse{animation:pulse 1.5s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+  .chip{display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;background:#f0f9ff;color:var(--sky1);border:1px solid #bae6fd}
+</style>
+
+<div class="app" id="app">
+
+  <!-- AUTH -->
+  <div class="auth-wrap" id="authWrap">
+    <div class="auth-bg">
+      <div class="auth-blob" style="width:400px;height:400px;background:#0ea5e9;top:-100px;left:-100px"></div>
+      <div class="auth-blob" style="width:300px;height:300px;background:#8b5cf6;bottom:-50px;right:-50px"></div>
+      <div class="auth-blob" style="width:200px;height:200px;background:#f59e0b;top:50%;left:60%"></div>
+    </div>
+    <div class="auth-info">
+      <h1>Weather Forecasting & Prediction</h1>
+      <p>Get real-time insights, track historical data, and predict upcoming weather conditions for your trips with AI-powered analytics. Plan smarter, travel safer.</p>
+      <div class="auth-images">
+        <img src="https://images.unsplash.com/photo-1592210454359-9043f067919b?w=400&q=80" alt="Cloudy Sky">
+        <img src="https://images.unsplash.com/photo-1534088568595-a066f410bcda?w=400&q=80" alt="Sunny Sky">
+      </div>
+    </div>
+    <div class="auth-card">
+      <div class="auth-logo">
+        <span class="icon">⛅</span>
+        <h1>SkyLog</h1>
+        <p>Professional Weather Recording System</p>
+      </div>
+      <div class="auth-tabs">
+        <div class="auth-tab active" onclick="switchAuth('login')">Sign In</div>
+        <div class="auth-tab" onclick="switchAuth('register')">Register</div>
+      </div>
+      <div id="authErr" class="err-msg"></div>
+
+      <!-- LOGIN -->
+      <div id="loginForm">
+        <div class="field"><label>Email</label><input type="email" id="loginEmail" placeholder="you@example.com"></div>
+        <div class="field"><label>Password</label><input type="password" id="loginPass" placeholder="••••••••"></div>
+        <button class="btn-primary" onclick="doLogin()">Sign In to SkyLog</button>
+        <div class="auth-divider">Demo: any registered account</div>
+      </div>
+
+      <!-- REGISTER -->
+      <div id="registerForm" style="display:none">
+        <div class="field"><label>Full Name</label><input type="text" id="regName" placeholder="Jane Doe"></div>
+        <div class="field"><label>Email</label><input type="email" id="regEmail" placeholder="you@example.com"></div>
+        <div class="field"><label>Location</label><input type="text" id="regLocation" placeholder="Your city"></div>
+        <div class="field"><label>Password</label><input type="password" id="regPass" placeholder="Min 6 characters"></div>
+        <button class="btn-primary" onclick="doRegister()">Create Account</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN APP -->
+  <div id="mainApp" style="display:none;flex-direction:column;min-height:100vh">
+    <nav class="topnav">
+      <div class="brand"><span class="brand-icon">⛅</span>SkyLog</div>
+      <div class="nav-tabs">
+        <button class="nav-tab active" onclick="switchPage('dashboard',this)">🏠 Dashboard</button>
+        <button class="nav-tab" onclick="switchPage('predict',this)">🔮 Prediction</button>
+        <button class="nav-tab" onclick="switchPage('trips',this)">✈️ My Trips</button>
+      </div>
+      <div class="user-pill" onclick="doLogout()">
+        <div class="avatar" id="navAvatar">?</div>
+        <span class="user-name" id="navName">User</span>
+      </div>
+    </nav>
+
+    <!-- DASHBOARD PAGE -->
+    <div class="page active" id="dashboardPage">
+      <div style="padding:2rem;max-width:1400px;margin:0 auto;width:100%">
+        <div class="page-header">
+          <h2>🌤️ Weather Dashboard</h2>
+          <p>Today's conditions and your weather log history</p>
+        </div>
+
+        <!-- SEARCH BAR -->
+        <div class="search-bar">
+          <input type="text" id="locationSearch" placeholder="Search location for current weather..." value="Chennai">
+          <button onclick="fetchCurrentWeather()">Get Weather</button>
+        </div>
+
+        <!-- HERO -->
+        <div class="weather-hero" id="weatherHero">
+          <div class="weather-hero-bg">
+            <div class="hero-blob" style="width:300px;height:300px;background:#38bdf8;top:-100px;right:100px"></div>
+            <div class="hero-blob" style="width:200px;height:200px;background:#8b5cf6;bottom:-50px;left:200px"></div>
+          </div>
+          <div class="weather-hero-inner">
+            <div class="hero-left">
+              <div class="hero-location">📍 <span id="heroCity">Chennai</span></div>
+              <div class="hero-temp"><span id="heroTemp">--</span>°C</div>
+              <div class="hero-condition" id="heroCond">Loading...</div>
+              <div class="hero-stats">
+                <div class="hero-stat"><div class="hval" id="heroHum">--%</div><div class="hlbl">Humidity</div></div>
+                <div class="hero-stat"><div class="hval" id="heroWind">--</div><div class="hlbl">Wind km/h</div></div>
+                <div class="hero-stat"><div class="hval" id="heroFeel">--°C</div><div class="hlbl">Feels Like</div></div>
+              </div>
+            </div>
+            <div class="hero-right">
+              <div class="weather-emoji-big" id="heroEmoji">⛅</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STATS -->
+        <div class="stats-row" id="statsRow">
+          <div class="stat-card sky"><div class="bg-icon">🌡️</div><div class="label">7-Day Avg Temp</div><div class="value" id="stat7avg">--°</div><div class="sub">From recent logs</div></div>
+          <div class="stat-card sun"><div class="bg-icon">☀️</div><div class="label">Total Logs</div><div class="value" id="statTotal">0</div><div class="sub">Weather entries</div></div>
+          <div class="stat-card rain"><div class="bg-icon">💧</div><div class="label">Avg Humidity</div><div class="value" id="statHum">--%</div><div class="sub">Across all logs</div></div>
+          <div class="stat-card green"><div class="bg-icon">🌡️</div><div class="label">Max Temp</div><div class="value" id="statMax">--°</div><div class="sub">Hottest recorded</div></div>
+        </div>
+
+        <!-- 7-DAY AVG BANNER -->
+        <div class="avg-banner" id="avgBanner" style="display:none">
+          <div class="avg-icon">📊</div>
+          <div>
+            <div class="avg-num" id="avgNum">--°C</div>
+            <div class="avg-lbl">7-Day Average Temperature (last 7 records)</div>
+          </div>
+        </div>
+
+        <div class="grid2">
+          <!-- LOG FORM -->
+          <div class="card">
+            <div class="card-title"><span class="icon">➕</span> Log Weather Entry</div>
+            <div class="form-grid">
+              <div class="form-field"><label>Date</label><input type="date" id="logDate"></div>
+              <div class="form-field"><label>Location</label><input type="text" id="logLocation" placeholder="City"></div>
+              <div class="form-field"><label>Temperature (°C)</label><input type="number" id="logTemp" placeholder="e.g. 34"></div>
+              <div class="form-field"><label>Condition</label>
+                <select id="logCondition">
+                  <option value="Sunny">☀️ Sunny</option>
+                  <option value="Rainy">🌧️ Rainy</option>
+                  <option value="Cloudy">☁️ Cloudy</option>
+                </select>
+              </div>
+              <div class="form-field" style="grid-column:1/-1"><label>Humidity (%)</label><input type="number" id="logHumidity" placeholder="e.g. 65" min="0" max="100"></div>
+            </div>
+            <button class="btn-add" onclick="addLog()">➕ Add Weather Log</button>
+          </div>
+
+          <!-- TEMP CHART -->
+          <div class="card">
+            <div class="card-title"><span class="icon">📈</span> Temperature Trend</div>
+            <div class="chart-wrap"><canvas id="tempChart" role="img" aria-label="Temperature trend from recent weather logs">Temperature trend chart</canvas></div>
+          </div>
+        </div>
+
+        <!-- CONDITION CHART ROW -->
+        <div class="grid2" style="margin-bottom:2rem">
+          <div class="card">
+            <div class="card-title"><span class="icon">🌤️</span> Conditions Breakdown</div>
+            <div class="chart-wrap"><canvas id="condChart" role="img" aria-label="Weather condition distribution">Conditions chart</canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-title"><span class="icon">💧</span> Humidity Trend</div>
+            <div class="chart-wrap"><canvas id="humChart" role="img" aria-label="Humidity trend chart">Humidity chart</canvas></div>
+          </div>
+        </div>
+
+        <!-- LOG TABLE -->
+        <div class="card">
+          <div class="card-title"><span class="icon">📋</span> Weather Log History</div>
+          <div class="table-wrap">
+            <table id="logTable">
+              <thead><tr><th>Date</th><th>Location</th><th>Temp</th><th>Condition</th><th>Humidity</th><th>Status</th></tr></thead>
+              <tbody id="logTbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PREDICT PAGE -->
+    <div class="page" id="predictPage">
+      <div style="padding:2rem;max-width:1400px;margin:0 auto;width:100%">
+        <div class="page-header">
+          <h2>🔮 Weather Prediction</h2>
+          <p>Plan your trips with AI-powered weather forecasts</p>
+        </div>
+
+        <div class="pred-hero">
+          <h3>Trip Weather Planner</h3>
+          <p>Select a destination and pick dates on the calendar to get predicted weather conditions</p>
+        </div>
+
+        <div class="grid2">
+          <div class="card">
+            <div class="card-title"><span class="icon">📍</span> Destination & Calendar</div>
+            <div class="form-field" style="margin-bottom:1rem"><label>Destination City</label><input type="text" id="predCity" placeholder="Enter city name" value="Mumbai"></div>
+            <div style="margin-bottom:1rem">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem">
+                <button onclick="prevMonth()" style="background:#f1f5f9;border:none;padding:6px 12px;border-radius:8px;cursor:pointer;font-size:1rem">←</button>
+                <span style="font-weight:700;font-size:1rem" id="calMonthLabel">Month Year</span>
+                <button onclick="nextMonth()" style="background:#f1f5f9;border:none;padding:6px 12px;border-radius:8px;cursor:pointer;font-size:1rem">→</button>
+              </div>
+              <div class="cal-header" id="calDays"></div>
+              <div class="cal-grid" id="calGrid"></div>
+            </div>
+            <div style="font-size:13px;color:var(--muted);margin-bottom:1rem">
+              Selected: <span id="selectedDatesLabel" style="font-weight:600;color:var(--sky1)">None</span>
+            </div>
+            <button class="btn-add" onclick="getPrediction()">🔮 Get Weather Prediction</button>
+          </div>
+
+          <div class="card" id="predResultCard">
+            <div class="card-title"><span class="icon">📅</span> Forecast Results</div>
+            <div id="predResults">
+              <div class="no-data">
+                <div class="icon">🌍</div>
+                <p>Select a city and dates to see the forecast</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRIPS PAGE -->
+    <div class="page" id="tripsPage">
+      <div style="padding:2rem;max-width:1400px;margin:0 auto;width:100%;position:relative">
+        <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem">
+          <div>
+            <h2>✈️ My Trips</h2>
+            <p>Manage all your planned travel itineraries</p>
+          </div>
+          <button class="btn-add" style="width:auto;margin:0" onclick="openTripModal()">➕ New Trip</button>
+        </div>
+
+        <!-- TRIP MODAL (positioned absolutely in this container) -->
+        <div class="modal-overlay" id="tripModal">
+          <div class="modal-box">
+            <button class="modal-close" onclick="closeTripModal()">✕</button>
+            <div class="modal-title">Plan New Trip</div>
+            <div class="form-field" style="margin-bottom:.75rem"><label>Trip Name</label><input type="text" id="tripName" placeholder="e.g. Goa Beach Getaway"></div>
+            <div class="form-field" style="margin-bottom:.75rem"><label>Destination</label><input type="text" id="tripDest" placeholder="City, Country"></div>
+            <div class="form-grid" style="margin-bottom:.75rem">
+              <div class="form-field"><label>Start Date</label><input type="date" id="tripStart"></div>
+              <div class="form-field"><label>End Date</label><input type="date" id="tripEnd"></div>
+            </div>
+            <div class="form-field" style="margin-bottom:.75rem"><label>Trip Type</label>
+              <select id="tripType">
+                <option value="Beach">🏖️ Beach</option><option value="Mountain">⛰️ Mountain</option>
+                <option value="City">🏙️ City</option><option value="Adventure">🧗 Adventure</option>
+                <option value="Cultural">🏛️ Cultural</option><option value="Wildlife">🦁 Wildlife</option>
+              </select>
+            </div>
+            <div class="form-field" style="margin-bottom:1.25rem"><label>Expected Condition</label>
+              <select id="tripCondition">
+                <option value="Sunny">☀️ Sunny</option><option value="Rainy">🌧️ Rainy</option><option value="Cloudy">☁️ Cloudy</option>
+              </select>
+            </div>
+            <button class="btn-primary" onclick="saveTrip()">Save Trip</button>
+          </div>
+        </div>
+
+        <div id="tripsGrid" class="grid3"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const USERS_KEY='skylog_users';const LOGS_KEY='skylog_logs';const TRIPS_KEY='skylog_trips';const CUR_KEY='skylog_current';
+let currentUser=null;let tempChart=null;let condChart=null;let humChart=null;
+let calYear=new Date().getFullYear();let calMonth=new Date().getMonth();
+let selectedDates=[];let currentLogs=[];let currentTrips=[];
+
+function getStore(k){try{return JSON.parse(localStorage.getItem(k)||'[]')}catch{return[]}}
+function setStore(k,v){localStorage.setItem(k,JSON.stringify(v))}
+
+function showToast(msg,icon='✅'){
+  const t=document.getElementById('toast');
+  t.innerHTML=icon+' '+msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+function switchAuth(mode){
+  document.getElementById('loginForm').style.display=mode==='login'?'block':'none';
+  document.getElementById('registerForm').style.display=mode==='register'?'block':'none';
+  document.querySelectorAll('.auth-tab').forEach((t,i)=>t.classList.toggle('active',(mode==='login'&&i===0)||(mode==='register'&&i===1)));
+  document.getElementById('authErr').style.display='none';
+}
+
+function showErr(msg){const e=document.getElementById('authErr');e.textContent=msg;e.style.display='block';}
+
+function doRegister(){
+  const name=document.getElementById('regName').value.trim();
+  const email=document.getElementById('regEmail').value.trim();
+  const loc=document.getElementById('regLocation').value.trim();
+  const pass=document.getElementById('regPass').value;
+  if(!name||!email||!loc||!pass){showErr('All fields required');return;}
+  if(pass.length<6){showErr('Password must be at least 6 characters');return;}
+  const users=getStore(USERS_KEY);
+  if(users.find(u=>u.email===email)){showErr('Email already registered');return;}
+  users.push({name,email,loc,pass});setStore(USERS_KEY,users);
+  showErr('');showToast('Account created! Please sign in.','🎉');switchAuth('login');
+  document.getElementById('loginEmail').value=email;
+}
+
+function doLogin(){
+  const email=document.getElementById('loginEmail').value.trim();
+  const pass=document.getElementById('loginPass').value;
+  if(!email||!pass){showErr('Please enter credentials');return;}
+  const users=getStore(USERS_KEY);
+  const user=users.find(u=>u.email===email&&u.pass===pass);
+  if(!user){showErr('Invalid email or password');return;}
+  currentUser=user;setStore(CUR_KEY,user);
+  loadApp();
+}
+
+function doLogout(){
+  currentUser=null;localStorage.removeItem(CUR_KEY);
+  document.getElementById('authWrap').style.display='flex';
+  document.getElementById('mainApp').style.display='none';
+}
+
+function loadApp(){
+  document.getElementById('authWrap').style.display='none';
+  document.getElementById('mainApp').style.display='flex';
+  document.getElementById('navName').textContent=currentUser.name.split(' ')[0];
+  document.getElementById('navAvatar').textContent=currentUser.name[0].toUpperCase();
+  const today=new Date().toISOString().split('T')[0];
+  document.getElementById('logDate').value=today;
+  document.getElementById('logLocation').value=currentUser.loc||'';
+  document.getElementById('locationSearch').value=currentUser.loc||'Chennai';
+  currentLogs=getStore(LOGS_KEY).filter(l=>l.user===currentUser.email);
+  currentTrips=getStore(TRIPS_KEY).filter(t=>t.user===currentUser.email);
+  renderDashboard();fetchCurrentWeather();renderCalendar();renderTrips();
+}
+
+// ======= WEATHER API (open-meteo) =======
+async function fetchCurrentWeather(){
+  const city=document.getElementById('locationSearch').value.trim()||'Chennai';
+  document.getElementById('heroCity').textContent=city;
+  document.getElementById('heroCond').textContent='Fetching...';
+  document.getElementById('heroTemp').textContent='--';
+  document.getElementById('heroEmoji').textContent='⏳';
+  try{
+    const geoRes=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en&format=json`);
+    const geoData=await geoRes.json();
+    if(!geoData.results||geoData.results.length===0){document.getElementById('heroCond').textContent='City not found';return;}
+    const {latitude,longitude,name}=geoData.results[0];
+    document.getElementById('heroCity').textContent=name;
+    const wRes=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,windspeed_10m,apparent_temperature,weathercode&timezone=auto`);
+    const wData=await wRes.json();
+    const c=wData.current;
+    const code=c.weathercode;
+    let cond='Cloudy',emoji='☁️';
+    if(code<=1){cond='Sunny';emoji='☀️';}
+    else if(code<=3){cond='Partly Cloudy';emoji='⛅';}
+    else if(code>=51&&code<=82){cond='Rainy';emoji='🌧️';}
+    else if(code>=95){cond='Stormy';emoji='⛈️';}
+    document.getElementById('heroTemp').textContent=Math.round(c.temperature_2m);
+    document.getElementById('heroCond').textContent=cond;
+    document.getElementById('heroHum').textContent=c.relative_humidity_2m+'%';
+    document.getElementById('heroWind').textContent=Math.round(c.windspeed_10m);
+    document.getElementById('heroFeel').textContent=Math.round(c.apparent_temperature)+'°C';
+    document.getElementById('heroEmoji').textContent=emoji;
+  }catch(e){document.getElementById('heroCond').textContent='Unable to load weather';}
+}
+
+// ======= LOGS =======
+function addLog(){
+  const date=document.getElementById('logDate').value;
+  const location=document.getElementById('logLocation').value.trim();
+  const temp=parseFloat(document.getElementById('logTemp').value);
+  const condition=document.getElementById('logCondition').value;
+  const humidity=parseInt(document.getElementById('logHumidity').value);
+  if(!date||!location||isNaN(temp)||isNaN(humidity)){showToast('Fill all fields','⚠️');return;}
+  if(humidity<0||humidity>100){showToast('Humidity must be 0–100','⚠️');return;}
+  const entry={id:Date.now(),user:currentUser.email,date,location,temp,condition,humidity};
+  const allLogs=getStore(LOGS_KEY);
+  allLogs.push(entry);setStore(LOGS_KEY,allLogs);
+  currentLogs=allLogs.filter(l=>l.user===currentUser.email);
+  renderDashboard();showToast('Weather log added!');
+  document.getElementById('logTemp').value='';document.getElementById('logHumidity').value='';
+}
+
+function getCondEmoji(c){return c==='Sunny'?'☀️':c==='Rainy'?'🌧️':'☁️';}
+function getCondClass(c){return c==='Sunny'?'sunny':c==='Rainy'?'rainy':'cloudy';}
+
+function renderDashboard(){
+  const logs=[...currentLogs].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  const n=logs.length;
+  const last7=logs.slice(0,7);
+  const avg7=last7.length?last7.reduce((s,l)=>s+l.temp,0)/last7.length:null;
+  const avgHum=n?Math.round(logs.reduce((s,l)=>s+l.humidity,0)/n):0;
+  const maxTemp=n?Math.max(...logs.map(l=>l.temp)):null;
+
+  document.getElementById('stat7avg').textContent=avg7!=null?Math.round(avg7)+'°':'--°';
+  document.getElementById('statTotal').textContent=n;
+  document.getElementById('statHum').textContent=n?avgHum+'%':'--%';
+  document.getElementById('statMax').textContent=maxTemp!=null?maxTemp+'°':'--°';
+
+  if(avg7!=null){
+    document.getElementById('avgBanner').style.display='flex';
+    document.getElementById('avgNum').textContent=avg7.toFixed(1)+'°C';
+  } else {document.getElementById('avgBanner').style.display='none';}
+
+  // Table
+  const tbody=document.getElementById('logTbody');
+  if(n===0){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:2rem">No logs yet. Add your first entry!</td></tr>';return;}
+  tbody.innerHTML=logs.map(l=>{
+    const isHot=l.temp>40;
+    return`<tr class="${isHot?'hot-row':''}">
+      <td><strong>${l.date}</strong></td>
+      <td>📍 ${l.location}</td>
+      <td style="font-weight:700;color:${isHot?'#ef4444':l.temp>35?'#f59e0b':'#0ea5e9'}">${l.temp}°C ${isHot?'🔥':''}</td>
+      <td><span class="badge ${getCondClass(l.condition)}">${getCondEmoji(l.condition)} ${l.condition}</span></td>
+      <td>${l.humidity}%</td>
+      <td>${isHot?'<span class="badge" style="background:#fee2e2;color:#dc2626">🌡️ Extreme</span>':'<span class="badge" style="background:#f0fdf4;color:#166534">✓ Normal</span>'}</td>
+    </tr>`;
+  }).join('');
+
+  renderCharts(logs);
+}
+
+function renderCharts(logs){
+  const rev=[...logs].reverse().slice(-12);
+  const labels=rev.map(l=>l.date.slice(5));
+  const temps=rev.map(l=>l.temp);
+  const hums=rev.map(l=>l.humidity);
+
+  // Temp chart
+  if(tempChart)tempChart.destroy();
+  const tc=document.getElementById('tempChart');
+  if(tc){
+    tempChart=new Chart(tc,{
+      type:'line',
+      data:{labels,datasets:[{label:'Temperature °C',data:temps,borderColor:'#0ea5e9',backgroundColor:'rgba(14,165,233,.1)',borderWidth:2.5,tension:.4,fill:true,pointBackgroundColor:temps.map(t=>t>40?'#ef4444':'#0ea5e9'),pointRadius:4}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{grid:{color:'rgba(0,0,0,.04)'},ticks:{color:'#64748b',font:{size:11}}},x:{grid:{display:false},ticks:{color:'#64748b',font:{size:11}}}}}
+    });
+  }
+
+  // Cond donut
+  const sunny=logs.filter(l=>l.condition==='Sunny').length;
+  const rainy=logs.filter(l=>l.condition==='Rainy').length;
+  const cloudy=logs.filter(l=>l.condition==='Cloudy').length;
+  if(condChart)condChart.destroy();
+  const cc=document.getElementById('condChart');
+  if(cc){
+    condChart=new Chart(cc,{
+      type:'doughnut',
+      data:{labels:['Sunny','Rainy','Cloudy'],datasets:[{data:[sunny,rainy,cloudy],backgroundColor:['#f59e0b','#3b82f6','#94a3b8'],borderWidth:0}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{padding:16,font:{size:12},color:'#64748b'}}}}
+    });
+  }
+
+  // Humidity chart
+  if(humChart)humChart.destroy();
+  const hc=document.getElementById('humChart');
+  if(hc){
+    humChart=new Chart(hc,{
+      type:'bar',
+      data:{labels,datasets:[{label:'Humidity %',data:hums,backgroundColor:hums.map(h=>h>80?'rgba(139,92,246,.7)':'rgba(59,130,246,.5)'),borderRadius:6}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:0,max:100,grid:{color:'rgba(0,0,0,.04)'},ticks:{color:'#64748b',font:{size:11}}},x:{grid:{display:false},ticks:{color:'#64748b',font:{size:11}}}}}
+    });
+  }
+}
+
+// ======= PAGE SWITCH =======
+function switchPage(name,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(name+'Page').classList.add('active');
+  if(btn)btn.classList.add('active');
+  if(name==='trips')renderTrips();
+}
+
+// ======= CALENDAR =======
+function renderCalendar(){
+  const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  document.getElementById('calMonthLabel').textContent=months[calMonth]+' '+calYear;
+  const days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  document.getElementById('calDays').innerHTML=days.map(d=>`<div class="cal-day-name">${d}</div>`).join('');
+  const firstDay=new Date(calYear,calMonth,1).getDay();
+  const daysInMonth=new Date(calYear,calMonth+1,0).getDate();
+  const todayStr=new Date().toISOString().split('T')[0];
+  const tripDates=currentTrips.flatMap(t=>{
+    const dates=[];let d=new Date(t.start);const e=new Date(t.end);
+    while(d<=e){dates.push(d.toISOString().split('T')[0]);d.setDate(d.getDate()+1);}
+    return dates;
+  });
+  let cells='';
+  for(let i=0;i<firstDay;i++)cells+=`<div class="cal-cell empty"></div>`;
+  for(let d=1;d<=daysInMonth;d++){
+    const dateStr=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isSel=selectedDates.includes(dateStr);const isToday=dateStr===todayStr;
+    const hasTrip=tripDates.includes(dateStr);
+    cells+=`<div class="cal-cell${isSel?' selected':''}${isToday?' today':''}${hasTrip?' has-trip':''}" onclick="toggleDate('${dateStr}')">${d}</div>`;
+  }
+  document.getElementById('calGrid').innerHTML=cells;
+  document.getElementById('selectedDatesLabel').textContent=selectedDates.length?selectedDates.join(', '):'None';
+}
+
+function prevMonth(){calMonth--;if(calMonth<0){calMonth=11;calYear--;}renderCalendar();}
+function nextMonth(){calMonth++;if(calMonth>11){calMonth=0;calYear++;}renderCalendar();}
+
+function toggleDate(d){
+  const idx=selectedDates.indexOf(d);
+  if(idx>-1)selectedDates.splice(idx,1);else selectedDates.push(d);
+  selectedDates.sort();renderCalendar();
+}
+
+// ======= PREDICTION =======
+async function getPrediction(){
+  if(selectedDates.length===0){showToast('Pick at least one date','📅');return;}
+  const city=document.getElementById('predCity').value.trim();
+  if(!city){showToast('Enter a city','📍');return;}
+  const container=document.getElementById('predResults');
+  container.innerHTML='<div class="loading-pulse" style="text-align:center;padding:2rem;color:#64748b">Fetching forecast for '+city+'...</div>';
+  try{
+    const geoRes=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1`);
+    const geoData=await geoRes.json();
+    if(!geoData.results||!geoData.results.length){container.innerHTML='<div class="no-data"><div class="icon">❌</div><p>City not found</p></div>';return;}
+    const {latitude,longitude,name}=geoData.results[0];
+    const minDate=selectedDates[0];const maxDate=selectedDates[selectedDates.length-1];
+    const wRes=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=temperature_2m_max,temperature_2m_min,weathercode,precipitation_probability_mean&timezone=auto&start_date=${minDate}&end_date=${maxDate}`);
+    const wData=await wRes.json();
+    const d=wData.daily;
+    const results=selectedDates.map((date,i)=>{
+      const di=d.time.indexOf(date);
+      if(di===-1)return null;
+      const code=d.weathercode[di];const high=Math.round(d.temperature_2m_max[di]);
+      const low=Math.round(d.temperature_2m_min[di]);const precip=d.precipitation_probability_mean[di];
+      let cond='Cloudy',emoji='☁️';
+      if(code<=1){cond='Sunny';emoji='☀️';}
+      else if(code<=3){cond='Partly Cloudy';emoji='⛅';}
+      else if(code>=51&&code<=82){cond='Rainy';emoji='🌧️';}
+      else if(code>=95){cond='Stormy';emoji='⛈️';}
+      return{date,high,low,cond,emoji,precip};
+    }).filter(Boolean);
+
+    if(results.length===0){container.innerHTML='<div class="no-data"><div class="icon">📅</div><p>No forecast data for selected dates</p></div>';return;}
+
+    container.innerHTML=`
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;padding:0 .25rem">
+        <div style="font-weight:700;color:#0f172a">📍 ${name}</div>
+        <button class="trip-btn" onclick="openTripModalFromPrediction('${name}','${selectedDates[0]}','${selectedDates[selectedDates.length-1]}')">Plan Trip ✈️</button>
+      </div>
+      <div class="pred-result">
+        ${results.map(r=>`
+          <div class="pred-item">
+            <div class="pred-date">${r.date.slice(5)}</div>
+            <div class="pred-emoji">${r.emoji}</div>
+            <div class="pred-temps">
+              <div class="pred-high">${r.high}°C</div>
+              <div class="pred-low">Low ${r.low}°C</div>
+            </div>
+            <div style="text-align:right">
+              <div class="pred-cond">${r.cond}</div>
+              <div style="font-size:11px;color:#3b82f6;margin-top:2px">💧 ${r.precip}% rain</div>
+            </div>
+          </div>
+        `).join('')}
+      </div>`;
+  }catch(e){container.innerHTML='<div class="no-data"><div class="icon">⚠️</div><p>Error fetching forecast</p></div>';}
+}
+
+// ======= TRIPS =======
+const tripColors={Beach:'linear-gradient(135deg,#06b6d4,#0ea5e9)',Mountain:'linear-gradient(135deg,#6366f1,#8b5cf6)',City:'linear-gradient(135deg,#f59e0b,#ef4444)',Adventure:'linear-gradient(135deg,#10b981,#059669)',Cultural:'linear-gradient(135deg,#ec4899,#8b5cf6)',Wildlife:'linear-gradient(135deg,#84cc16,#22c55e)'};
+const tripEmojis={Beach:'🏖️',Mountain:'⛰️',City:'🏙️',Adventure:'🧗',Cultural:'🏛️',Wildlife:'🦁'};
+
+let editingTripId = null;
+
+function openTripModal(){
+  editingTripId = null;
+  document.querySelector('.modal-title').textContent = 'Plan New Trip';
+  document.getElementById('tripName').value='';document.getElementById('tripDest').value='';
+  document.getElementById('tripStart').value='';document.getElementById('tripEnd').value='';
+  document.getElementById('tripModal').classList.add('open');
+}
+function openTripModalFromPrediction(city,start,end){
+  editingTripId = null;
+  document.querySelector('.modal-title').textContent = 'Plan New Trip';
+  switchPage('trips');setTimeout(()=>{
+    document.getElementById('tripName').value=city+' Trip';
+    document.getElementById('tripDest').value=city;
+    document.getElementById('tripStart').value=start;
+    document.getElementById('tripEnd').value=end;
+    document.getElementById('tripModal').classList.add('open');
+  },100);
+}
+function editTrip(id){
+  const trip = currentTrips.find(t => t.id === id);
+  if(!trip) return;
+  editingTripId = id;
+  document.querySelector('.modal-title').textContent = 'Edit Trip';
+  document.getElementById('tripName').value = trip.name;
+  document.getElementById('tripDest').value = trip.dest;
+  document.getElementById('tripStart').value = trip.start;
+  document.getElementById('tripEnd').value = trip.end;
+  document.getElementById('tripType').value = trip.type;
+  document.getElementById('tripCondition').value = trip.condition;
+  document.getElementById('tripModal').classList.add('open');
+}
+function closeTripModal(){document.getElementById('tripModal').classList.remove('open');}
+
+function saveTrip(){
+  const name=document.getElementById('tripName').value.trim();
+  const dest=document.getElementById('tripDest').value.trim();
+  const start=document.getElementById('tripStart').value;
+  const end=document.getElementById('tripEnd').value;
+  const type=document.getElementById('tripType').value;
+  const condition=document.getElementById('tripCondition').value;
+  if(!name||!dest||!start||!end){showToast('Fill all trip fields','⚠️');return;}
+  if(new Date(end)<new Date(start)){showToast('End must be after start','⚠️');return;}
+  
+  const allTrips=getStore(TRIPS_KEY);
+  if(editingTripId){
+    const idx = allTrips.findIndex(t => t.id === editingTripId);
+    if(idx !== -1) allTrips[idx] = { ...allTrips[idx], name, dest, start, end, type, condition };
+    showToast('Trip updated! 🎉');
+  } else {
+    const trip={id:Date.now(),user:currentUser.email,name,dest,start,end,type,condition};
+    allTrips.push(trip);
+    showToast('Trip saved! 🎉');
+  }
+  setStore(TRIPS_KEY,allTrips);
+  currentTrips=allTrips.filter(t=>t.user===currentUser.email);
+  closeTripModal();renderTrips();renderCalendar();
+}
+
+function deleteTrip(id){
+  const allTrips=getStore(TRIPS_KEY).filter(t=>t.id!==id);
+  setStore(TRIPS_KEY,allTrips);
+  currentTrips=allTrips.filter(t=>t.user===currentUser.email);
+  renderTrips();renderCalendar();showToast('Trip removed','🗑️');
+}
+
+function getDayCount(s,e){return Math.max(1,Math.round((new Date(e)-new Date(s))/(1000*60*60*24))+1);}
+
+function renderTrips(){
+  const grid=document.getElementById('tripsGrid');
+  if(currentTrips.length===0){
+    grid.innerHTML='<div style="grid-column:1/-1" class="no-data"><div class="icon">✈️</div><p>No trips planned yet. Head to the Prediction page to plan your first adventure!</p></div>';
+    return;
+  }
+  grid.innerHTML=currentTrips.map(t=>`
+    <div class="trip-card">
+      <div class="trip-header" style="background:${tripColors[t.type]||tripColors.City}">
+        <span>${tripEmojis[t.type]||'✈️'}</span>
+      </div>
+      <div class="trip-body">
+        <div class="trip-title">${t.name}</div>
+        <div class="trip-meta">
+          <span>📍 ${t.dest}</span>
+          <span>📅 ${t.start} → ${t.end}</span>
+          <span>⏱️ ${getDayCount(t.start,t.end)} days</span>
+          <span>${getCondEmoji(t.condition)} Expected: ${t.condition}</span>
+        </div>
+        <div class="trip-tags">
+          <span class="trip-tag chip">${t.type}</span>
+          <span class="trip-tag" style="background:${t.condition==='Sunny'?'#fef3c7':t.condition==='Rainy'?'#dbeafe':'#f1f5f9'};color:${t.condition==='Sunny'?'#92400e':t.condition==='Rainy'?'#1e40af':'#475569'};padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600">${getCondEmoji(t.condition)} ${t.condition}</span>
+        </div>
+        <div class="trip-actions">
+          <button class="btn-sm btn-outline" onclick="editTrip(${t.id})">Edit</button>
+          <button class="btn-sm btn-danger" onclick="deleteTrip(${t.id})">Delete</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// Init
+window.addEventListener('load',()=>{
+  const today=new Date();calYear=today.getFullYear();calMonth=today.getMonth();
+  const saved=localStorage.getItem(CUR_KEY);
+  if(saved){try{currentUser=JSON.parse(saved);loadApp();}catch{}}
+});
+</script>

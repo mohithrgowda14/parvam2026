@@ -1,0 +1,254 @@
+
+<h2 class="sr-only">Weather Recording System — log daily weather entries and view 7-day average temperature history.</h2>
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-sans); }
+  .ws-wrap { padding: 1.5rem 0; max-width: 860px; }
+  .ws-header { display: flex; align-items: center; gap: 12px; margin-bottom: 1.5rem; }
+  .ws-title { font-size: 20px; font-weight: 500; color: var(--color-text-primary); }
+  .ws-subtitle { font-size: 13px; color: var(--color-text-secondary); margin-top: 2px; }
+  .ws-grid { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 16px; margin-bottom: 1.5rem; }
+  @media (max-width: 600px) { .ws-grid { grid-template-columns: 1fr; } }
+  .ws-card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1.25rem; }
+  .ws-card-title { font-size: 13px; font-weight: 500; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 1rem; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+  .form-full { margin-bottom: 10px; }
+  label { font-size: 12px; color: var(--color-text-secondary); display: block; margin-bottom: 4px; }
+  input, select { width: 100%; font-size: 14px; }
+  .btn-add { width: 100%; margin-top: 4px; font-size: 14px; padding: 8px; cursor: pointer; }
+  .stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 1rem; }
+  .stat-box { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 0.75rem; text-align: center; }
+  .stat-val { font-size: 22px; font-weight: 500; color: var(--color-text-primary); }
+  .stat-lbl { font-size: 11px; color: var(--color-text-secondary); margin-top: 2px; }
+  .avg-bar-wrap { margin-top: 0.5rem; }
+  .avg-label { font-size: 12px; color: var(--color-text-secondary); margin-bottom: 6px; }
+  .avg-val { font-size: 28px; font-weight: 500; color: var(--color-text-primary); }
+  .avg-sub { font-size: 12px; color: var(--color-text-secondary); margin-top: 2px; }
+  .cond-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; padding: 4px 10px; border-radius: 20px; font-weight: 500; margin-top: 0.75rem; }
+  .cond-sunny { background: #FAEEDA; color: #633806; }
+  .cond-rainy { background: #E6F1FB; color: #0C447C; }
+  .cond-cloudy { background: #F1EFE8; color: #444441; }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { font-size: 11px; font-weight: 500; color: var(--color-text-secondary); text-align: left; padding: 6px 8px; border-bottom: 0.5px solid var(--color-border-tertiary); }
+  td { padding: 8px 8px; border-bottom: 0.5px solid var(--color-border-tertiary); color: var(--color-text-primary); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  .hot-row td { color: #A32D2D; }
+  .hot-row td:first-child::before { content: ''; display: inline-block; width: 6px; height: 6px; background: #E24B4A; border-radius: 50%; margin-right: 6px; vertical-align: middle; }
+  .empty-msg { text-align: center; color: var(--color-text-secondary); font-size: 13px; padding: 2rem 0; }
+  .cond-icon { font-size: 14px; }
+  .chart-wrap { margin-top: 1rem; position: relative; height: 180px; }
+</style>
+
+<div class="ws-wrap">
+  <div class="ws-header">
+    <div>
+      <div class="ws-title">Weather Recording System</div>
+      <div class="ws-subtitle">Log daily weather · auto-calculates 7-day average · highlights hot days above 40°C</div>
+    </div>
+  </div>
+
+  <div class="ws-grid">
+    <div class="ws-card">
+      <div class="ws-card-title">Add new entry</div>
+      <div class="form-row">
+        <div>
+          <label for="w-date">Date</label>
+          <input type="date" id="w-date">
+        </div>
+        <div>
+          <label for="w-loc">Location</label>
+          <input type="text" id="w-loc" placeholder="e.g. Chennai">
+        </div>
+      </div>
+      <div class="form-row">
+        <div>
+          <label for="w-temp">Temperature (°C)</label>
+          <input type="number" id="w-temp" placeholder="38" min="-50" max="60">
+        </div>
+        <div>
+          <label for="w-hum">Humidity (%)</label>
+          <input type="number" id="w-hum" placeholder="70" min="0" max="100">
+        </div>
+      </div>
+      <div class="form-full">
+        <label for="w-cond">Condition</label>
+        <select id="w-cond">
+          <option value="Sunny">Sunny</option>
+          <option value="Rainy">Rainy</option>
+          <option value="Cloudy">Cloudy</option>
+        </select>
+      </div>
+      <button class="btn-add" onclick="addEntry()">Add entry</button>
+      <div id="err-msg" style="font-size:12px;color:#A32D2D;margin-top:8px;display:none;"></div>
+    </div>
+
+    <div class="ws-card">
+      <div class="ws-card-title">Summary</div>
+      <div class="stat-row" id="stat-row">
+        <div class="stat-box"><div class="stat-val" id="s-count">0</div><div class="stat-lbl">Total logs</div></div>
+        <div class="stat-box"><div class="stat-val" id="s-max">—</div><div class="stat-lbl">Max temp</div></div>
+        <div class="stat-box"><div class="stat-val" id="s-hum">—</div><div class="stat-lbl">Avg humidity</div></div>
+      </div>
+      <div class="avg-label">7-day average temperature</div>
+      <div class="avg-val" id="avg-temp">—</div>
+      <div class="avg-sub" id="avg-sub">Add at least 1 entry to calculate</div>
+      <div id="cond-badge-wrap"></div>
+      <div class="chart-wrap">
+        <canvas id="tempChart" role="img" aria-label="7-day temperature trend chart">Temperature log chart</canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="ws-card">
+    <div class="ws-card-title">Log history <span id="log-count" style="font-weight:400;color:var(--color-text-secondary);"></span></div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Location</th>
+            <th>Temp (°C)</th>
+            <th>Condition</th>
+            <th>Humidity (%)</th>
+          </tr>
+        </thead>
+        <tbody id="log-body">
+          <tr><td colspan="5" class="empty-msg">No entries yet. Add your first weather log above.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+let logs = JSON.parse(localStorage.getItem('wx_logs') || '[]');
+let chartInst = null;
+
+const condIcon = c => c === 'Sunny' ? '☀' : c === 'Rainy' ? '🌧' : '☁';
+const condClass = c => c === 'Sunny' ? 'cond-sunny' : c === 'Rainy' ? 'cond-rainy' : 'cond-cloudy';
+
+function saveLogs() {
+  try { localStorage.setItem('wx_logs', JSON.stringify(logs)); } catch(e) {}
+}
+
+function addEntry() {
+  const err = document.getElementById('err-msg');
+  err.style.display = 'none';
+  const date = document.getElementById('w-date').value;
+  const loc = document.getElementById('w-loc').value.trim();
+  const temp = document.getElementById('w-temp').value;
+  const hum = document.getElementById('w-hum').value;
+  const cond = document.getElementById('w-cond').value;
+  if (!date || !loc || temp === '' || hum === '') {
+    err.textContent = 'Please fill in all fields.';
+    err.style.display = 'block';
+    return;
+  }
+  const entry = { date, location: loc, temp: parseFloat(temp), condition: cond, humidity: parseFloat(hum) };
+  logs.unshift(entry);
+  saveLogs();
+  document.getElementById('w-loc').value = '';
+  document.getElementById('w-temp').value = '';
+  document.getElementById('w-hum').value = '';
+  renderAll();
+}
+
+function renderAll() {
+  renderTable();
+  renderSummary();
+  renderChart();
+}
+
+function renderTable() {
+  const body = document.getElementById('log-body');
+  document.getElementById('log-count').textContent = logs.length ? `(${logs.length})` : '';
+  if (!logs.length) {
+    body.innerHTML = '<tr><td colspan="5" class="empty-msg">No entries yet. Add your first weather log above.</td></tr>';
+    return;
+  }
+  body.innerHTML = logs.map(e => {
+    const hot = e.temp > 40;
+    return `<tr class="${hot ? 'hot-row' : ''}">
+      <td>${e.date}</td>
+      <td>${e.location}</td>
+      <td>${e.temp}°C${hot ? ' 🔴' : ''}</td>
+      <td><span class="cond-badge ${condClass(e.condition)}" style="font-size:12px;padding:2px 8px;">${condIcon(e.condition)} ${e.condition}</span></td>
+      <td>${e.humidity}%</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderSummary() {
+  document.getElementById('s-count').textContent = logs.length;
+  if (!logs.length) {
+    document.getElementById('s-max').textContent = '—';
+    document.getElementById('s-hum').textContent = '—';
+    document.getElementById('avg-temp').textContent = '—';
+    document.getElementById('avg-sub').textContent = 'Add at least 1 entry to calculate';
+    document.getElementById('cond-badge-wrap').innerHTML = '';
+    return;
+  }
+  const temps = logs.map(e => e.temp);
+  const maxT = Math.max(...temps);
+  const avgH = Math.round(logs.reduce((a,e) => a + e.humidity, 0) / logs.length);
+  document.getElementById('s-max').textContent = maxT + '°C';
+  document.getElementById('s-hum').textContent = avgH + '%';
+
+  const last7 = logs.slice(0, 7);
+  const avg7 = (last7.reduce((a,e) => a + e.temp, 0) / last7.length).toFixed(1);
+  document.getElementById('avg-temp').textContent = avg7 + '°C';
+  document.getElementById('avg-sub').textContent = `Based on last ${last7.length} record${last7.length > 1 ? 's' : ''}`;
+
+  const latest = logs[0];
+  document.getElementById('cond-badge-wrap').innerHTML =
+    `<span class="cond-badge ${condClass(latest.condition)}">${condIcon(latest.condition)} Latest: ${latest.condition}</span>`;
+}
+
+function renderChart() {
+  const ctx = document.getElementById('tempChart').getContext('2d');
+  const last7 = logs.slice(0, 7).reverse();
+  if (chartInst) { chartInst.destroy(); chartInst = null; }
+  if (!last7.length) return;
+  chartInst = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: last7.map(e => e.date.slice(5)),
+      datasets: [{
+        label: 'Temp °C',
+        data: last7.map(e => e.temp),
+        borderColor: '#D85A30',
+        backgroundColor: 'rgba(216,90,48,0.08)',
+        borderWidth: 2,
+        pointBackgroundColor: last7.map(e => e.temp > 40 ? '#E24B4A' : '#D85A30'),
+        pointRadius: 4,
+        tension: 0.35,
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { font: { size: 11 }, color: '#888780' }, grid: { display: false } },
+        y: { ticks: { font: { size: 11 }, color: '#888780', callback: v => v + '°' }, grid: { color: 'rgba(0,0,0,0.06)' } }
+      }
+    }
+  });
+}
+
+const today = new Date().toISOString().split('T')[0];
+document.getElementById('w-date').value = today;
+
+if (!logs.length) {
+  logs = [
+    { date: '2025-08-01', location: 'Chennai', temp: 38, condition: 'Sunny', humidity: 70 }
+  ];
+  saveLogs();
+}
+
+renderAll();
+</script>

@@ -1,0 +1,383 @@
+
+<h2 class="sr-only">Weather app with two pages: a daily weather recorder and an AI-powered weather prediction page for any location and date range.</h2>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+.app{font-family:var(--font-sans);padding:1rem 0;}
+.nav{display:flex;gap:0;margin-bottom:1.5rem;border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden;background:var(--color-background-secondary);}
+.nav-btn{flex:1;padding:10px 0;font-size:13px;font-weight:500;cursor:pointer;border:none;background:transparent;color:var(--color-text-secondary);transition:background .15s,color .15s;}
+.nav-btn.active{background:var(--color-background-primary);color:var(--color-text-primary);border-bottom:2.5px solid #378ADD;}
+.page{display:none;} .page.show{display:block;}
+
+.section-label{font-size:11px;font-weight:500;letter-spacing:.07em;color:var(--color-text-secondary);text-transform:uppercase;margin-bottom:.75rem;}
+.card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1.25rem;margin-bottom:1rem;}
+.two-col{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:1rem;}
+@media(max-width:580px){.two-col{grid-template-columns:1fr;}}
+label{font-size:12px;color:var(--color-text-secondary);display:block;margin-bottom:4px;}
+input,select{width:100%;font-size:14px;margin-bottom:10px;}
+.btn{cursor:pointer;font-size:13px;font-weight:500;padding:9px 18px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:transparent;color:var(--color-text-primary);}
+.btn-primary{background:#378ADD;color:#E6F1FB;border-color:#185FA5;}
+.btn-danger{background:#FCEBEB;color:#791F1F;border-color:#F09595;}
+.btn-full{width:100%;padding:10px;}
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1rem;}
+.stat-box{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:.75rem;text-align:center;}
+.stat-val{font-size:20px;font-weight:500;color:var(--color-text-primary);}
+.stat-lbl{font-size:11px;color:var(--color-text-secondary);margin-top:2px;}
+table{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed;}
+th{font-size:11px;font-weight:500;color:var(--color-text-secondary);text-align:left;padding:6px 8px;border-bottom:0.5px solid var(--color-border-tertiary);}
+td{padding:8px;border-bottom:0.5px solid var(--color-border-tertiary);color:var(--color-text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+tr:last-child td{border-bottom:none;}
+.hot td{color:#A32D2D;} 
+.badge{display:inline-block;font-size:11px;font-weight:500;padding:2px 8px;border-radius:20px;}
+.badge-sunny{background:#FAEEDA;color:#633806;}
+.badge-rainy{background:#E6F1FB;color:#0C447C;}
+.badge-cloudy{background:#F1EFE8;color:#444441;}
+.badge-stormy{background:#FBEAF0;color:#72243E;}
+.badge-windy{background:#EAF3DE;color:#27500A;}
+.empty{text-align:center;color:var(--color-text-secondary);font-size:13px;padding:2rem 0;}
+.chart-wrap{position:relative;height:180px;margin-top:.75rem;}
+.err{font-size:12px;color:#A32D2D;margin-top:6px;display:none;}
+
+.pred-hero{border-radius:var(--border-radius-lg);padding:1.5rem 1.25rem;margin-bottom:1rem;}
+.pred-hero.sunny{background:#FAEEDA;border:0.5px solid #EF9F27;}
+.pred-hero.rainy{background:#E6F1FB;border:0.5px solid #85B7EB;}
+.pred-hero.cloudy{background:#F1EFE8;border:0.5px solid #B4B2A9;}
+.pred-hero.stormy{background:#FBEAF0;border:0.5px solid #ED93B1;}
+.pred-hero.windy{background:#EAF3DE;border:0.5px solid #97C459;}
+.hero-loc{font-size:22px;font-weight:500;color:var(--color-text-primary);}
+.hero-range{font-size:13px;color:var(--color-text-secondary);margin-top:3px;}
+.hero-icon{font-size:40px;margin-bottom:.5rem;}
+.forecast-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;margin-top:1rem;}
+.fcast-card{border-radius:var(--border-radius-md);padding:.85rem .75rem;text-align:center;border:0.5px solid var(--color-border-tertiary);}
+.fcast-card.sunny{background:#FAEEDA;}
+.fcast-card.rainy{background:#E6F1FB;}
+.fcast-card.cloudy{background:#F1EFE8;}
+.fcast-card.stormy{background:#FBEAF0;}
+.fcast-card.windy{background:#EAF3DE;}
+.fcast-date{font-size:11px;color:var(--color-text-secondary);margin-bottom:4px;}
+.fcast-icon{font-size:22px;margin:4px 0;}
+.fcast-temp{font-size:16px;font-weight:500;color:var(--color-text-primary);}
+.fcast-cond{font-size:11px;color:var(--color-text-secondary);margin-top:2px;}
+.loading-dots{display:inline-block;} .loading-dots::after{content:'...';animation:dots 1.2s infinite;} @keyframes dots{0%{content:'.';}33%{content:'..';}66%{content:'...';}100%{content:'';}}
+.ai-summary{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:1rem;font-size:13px;color:var(--color-text-secondary);line-height:1.6;margin-top:.75rem;}
+.pill-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:.75rem;}
+.pill{font-size:12px;padding:4px 12px;border-radius:20px;font-weight:500;}
+.pill-blue{background:#E6F1FB;color:#0C447C;}
+.pill-green{background:#EAF3DE;color:#27500A;}
+.pill-amber{background:#FAEEDA;color:#633806;}
+.pill-pink{background:#FBEAF0;color:#72243E;}
+.pill-teal{background:#E1F5EE;color:#085041;}
+</style>
+
+<div class="app">
+  <div class="nav">
+    <button class="nav-btn active" onclick="switchPage('recorder')">Weather Recorder</button>
+    <button class="nav-btn" onclick="switchPage('predictor')">Weather Predictor</button>
+  </div>
+
+  <div class="page show" id="pg-recorder">
+    <div class="two-col">
+      <div class="card">
+        <div class="section-label">Add new entry</div>
+        <label>Date</label><input type="date" id="w-date">
+        <label>Location</label><input type="text" id="w-loc" placeholder="e.g. Chennai">
+        <div class="two-col" style="gap:8px;">
+          <div><label>Temperature (°C)</label><input type="number" id="w-temp" placeholder="38" min="-50" max="60"></div>
+          <div><label>Humidity (%)</label><input type="number" id="w-hum" placeholder="70" min="0" max="100"></div>
+        </div>
+        <label>Condition</label>
+        <select id="w-cond"><option>Sunny</option><option>Rainy</option><option>Cloudy</option></select>
+        <button class="btn btn-primary btn-full" onclick="addEntry()">Add entry</button>
+        <div class="err" id="rec-err">Please fill in all fields.</div>
+      </div>
+
+      <div class="card">
+        <div class="section-label">Summary</div>
+        <div class="stat-grid">
+          <div class="stat-box"><div class="stat-val" id="s-count">0</div><div class="stat-lbl">Total logs</div></div>
+          <div class="stat-box"><div class="stat-val" id="s-max">—</div><div class="stat-lbl">Max temp</div></div>
+          <div class="stat-box"><div class="stat-val" id="s-hum">—</div><div class="stat-lbl">Avg humidity</div></div>
+        </div>
+        <div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:4px;">7-day avg temperature</div>
+        <div style="font-size:26px;font-weight:500;color:var(--color-text-primary);" id="avg7">—</div>
+        <div style="font-size:12px;color:var(--color-text-secondary);" id="avg7-sub">Add entries to calculate</div>
+        <div class="chart-wrap"><canvas id="recChart" role="img" aria-label="Temperature trend for last 7 entries">Temperature trend chart</canvas></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-label">Log history <span id="log-ct" style="font-weight:400;"></span></div>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead><tr><th style="width:90px;">Date</th><th>Location</th><th style="width:90px;">Temp</th><th style="width:90px;">Condition</th><th style="width:80px;">Humidity</th></tr></thead>
+          <tbody id="log-body"><tr><td colspan="5" class="empty">No entries yet.</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="page" id="pg-predictor">
+    <div class="card">
+      <div class="section-label">Predict weather</div>
+      <div class="two-col" style="gap:8px;margin-bottom:0;">
+        <div>
+          <label>Location</label>
+          <input type="text" id="p-loc" placeholder="e.g. Mumbai, Tokyo, London">
+        </div>
+        <div>
+          <label>Climate type (optional)</label>
+          <select id="p-climate">
+            <option value="">Auto-detect</option>
+            <option value="tropical">Tropical</option>
+            <option value="arid">Arid / Desert</option>
+            <option value="temperate">Temperate</option>
+            <option value="continental">Continental</option>
+            <option value="polar">Polar / Cold</option>
+            <option value="coastal">Coastal</option>
+          </select>
+        </div>
+      </div>
+      <div class="two-col" style="gap:8px;margin-bottom:0;">
+        <div><label>Start date</label><input type="date" id="p-start"></div>
+        <div><label>End date</label><input type="date" id="p-end"></div>
+      </div>
+      <button class="btn btn-primary btn-full" style="margin-top:4px;" onclick="runPrediction()">Generate forecast</button>
+      <div class="err" id="pred-err">Please fill in location and dates.</div>
+    </div>
+
+    <div id="pred-output"></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+let logs = [];
+try { logs = JSON.parse(localStorage.getItem('wx_logs2') || '[]'); } catch(e){}
+let recChart = null;
+
+function switchPage(p) {
+  document.querySelectorAll('.page').forEach(el => el.classList.remove('show'));
+  document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('pg-' + p).classList.add('show');
+  event.target.classList.add('active');
+}
+
+function saveLogs(){ try{ localStorage.setItem('wx_logs2', JSON.stringify(logs)); }catch(e){} }
+
+function condIcon(c){
+  if(c==='Sunny') return '☀';
+  if(c==='Rainy') return '🌧';
+  if(c==='Cloudy') return '☁';
+  if(c==='Stormy') return '⛈';
+  return '💨';
+}
+function condBadge(c){
+  const cls = {Sunny:'badge-sunny',Rainy:'badge-rainy',Cloudy:'badge-cloudy',Stormy:'badge-stormy',Windy:'badge-windy'};
+  return `<span class="badge ${cls[c]||'badge-cloudy'}">${condIcon(c)} ${c}</span>`;
+}
+
+function addEntry(){
+  const err = document.getElementById('rec-err');
+  err.style.display='none';
+  const date=document.getElementById('w-date').value;
+  const loc=document.getElementById('w-loc').value.trim();
+  const temp=document.getElementById('w-temp').value;
+  const hum=document.getElementById('w-hum').value;
+  const cond=document.getElementById('w-cond').value;
+  if(!date||!loc||temp===''||hum===''){err.style.display='block';return;}
+  logs.unshift({date,location:loc,temp:parseFloat(temp),condition:cond,humidity:parseFloat(hum)});
+  saveLogs();
+  document.getElementById('w-loc').value='';
+  document.getElementById('w-temp').value='';
+  document.getElementById('w-hum').value='';
+  renderRecorder();
+}
+
+function renderRecorder(){
+  const body=document.getElementById('log-body');
+  document.getElementById('log-ct').textContent=logs.length?`(${logs.length})`:'';
+  if(!logs.length){
+    body.innerHTML='<tr><td colspan="5" class="empty">No entries yet. Add your first log above.</td></tr>';
+    document.getElementById('s-count').textContent='0';
+    document.getElementById('s-max').textContent='—';
+    document.getElementById('s-hum').textContent='—';
+    document.getElementById('avg7').textContent='—';
+    document.getElementById('avg7-sub').textContent='Add entries to calculate';
+    if(recChart){recChart.destroy();recChart=null;}
+    return;
+  }
+  body.innerHTML=logs.map(e=>{
+    const hot=e.temp>40;
+    return `<tr class="${hot?'hot':''}"><td>${e.date}</td><td>${e.location}</td><td>${e.temp}°C${hot?' 🔴':''}</td><td>${condBadge(e.condition)}</td><td>${e.humidity}%</td></tr>`;
+  }).join('');
+  document.getElementById('s-count').textContent=logs.length;
+  const temps=logs.map(e=>e.temp);
+  document.getElementById('s-max').textContent=Math.max(...temps)+'°C';
+  const avgH=Math.round(logs.reduce((a,e)=>a+e.humidity,0)/logs.length);
+  document.getElementById('s-hum').textContent=avgH+'%';
+  const last7=logs.slice(0,7);
+  const avg7=(last7.reduce((a,e)=>a+e.temp,0)/last7.length).toFixed(1);
+  document.getElementById('avg7').textContent=avg7+'°C';
+  document.getElementById('avg7-sub').textContent=`Based on last ${last7.length} record${last7.length>1?'s':''}`;
+  const ctx=document.getElementById('recChart').getContext('2d');
+  if(recChart){recChart.destroy();}
+  const rev=[...last7].reverse();
+  recChart=new Chart(ctx,{
+    type:'line',
+    data:{labels:rev.map(e=>e.date.slice(5)),datasets:[{label:'Temp °C',data:rev.map(e=>e.temp),borderColor:'#D85A30',backgroundColor:'rgba(216,90,48,0.08)',borderWidth:2,pointBackgroundColor:rev.map(e=>e.temp>40?'#E24B4A':'#D85A30'),pointRadius:4,tension:.35,fill:true}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:11},color:'#888780'},grid:{display:false}},y:{ticks:{font:{size:11},color:'#888780',callback:v=>v+'°'},grid:{color:'rgba(0,0,0,0.06)'}}}}
+  });
+}
+
+const CONDITIONS=['Sunny','Rainy','Cloudy','Stormy','Windy'];
+const CLIMATE_PROFILES={
+  tropical:{tempRange:[28,40],humidity:[70,95],bias:{Sunny:4,Rainy:4,Cloudy:2,Stormy:2,Windy:0}},
+  arid:{tempRange:[30,48],humidity:[10,30],bias:{Sunny:7,Rainy:0,Cloudy:1,Stormy:0,Windy:2}},
+  temperate:{tempRange:[8,24],humidity:[40,70],bias:{Sunny:3,Rainy:3,Cloudy:3,Stormy:1,Windy:1}},
+  continental:{tempRange:[-5,32],humidity:[30,60],bias:{Sunny:3,Rainy:2,Cloudy:3,Stormy:2,Windy:1}},
+  polar:{tempRange:[-30,5],humidity:[40,75],bias:{Sunny:1,Rainy:0,Cloudy:4,Stormy:3,Windy:2}},
+  coastal:{tempRange:[15,28],humidity:[55,80],bias:{Sunny:3,Rainy:2,Cloudy:3,Stormy:1,Windy:3}},
+  default:{tempRange:[18,35],humidity:[40,75],bias:{Sunny:4,Rainy:2,Cloudy:2,Stormy:1,Windy:1}}
+};
+
+function guessClimate(loc){
+  const l=loc.toLowerCase();
+  if(/dubai|cairo|riyadh|sahara|desert|phoenix|las vegas/.test(l)) return 'arid';
+  if(/mumbai|chennai|delhi|singapore|jakarta|bangkok|miami|hawaii|kolkata/.test(l)) return 'tropical';
+  if(/london|paris|berlin|amsterdam|seattle|portland|vancouver|sydney/.test(l)) return 'temperate';
+  if(/moscow|chicago|toronto|montreal|beijing|seoul/.test(l)) return 'continental';
+  if(/alaska|iceland|norway|finland|canada|siberia/.test(l)) return 'polar';
+  if(/coast|beach|bay|harbour|harbor|port|sea|ocean/.test(l)) return 'coastal';
+  return 'default';
+}
+
+function pickWeightedCond(bias){
+  const pool=[];
+  Object.entries(bias).forEach(([c,w])=>{for(let i=0;i<w;i++) pool.push(c);});
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+
+function runPrediction(){
+  const err=document.getElementById('pred-err');
+  err.style.display='none';
+  const loc=document.getElementById('p-loc').value.trim();
+  const start=document.getElementById('p-start').value;
+  const end=document.getElementById('p-end').value;
+  let climate=document.getElementById('p-climate').value;
+  if(!loc||!start||!end){err.style.display='block';return;}
+  if(new Date(end)<new Date(start)){err.textContent='End date must be after start date.';err.style.display='block';return;}
+  if(!climate) climate=guessClimate(loc);
+  const profile=CLIMATE_PROFILES[climate]||CLIMATE_PROFILES.default;
+
+  const days=[];
+  let cur=new Date(start);
+  const endD=new Date(end);
+  while(cur<=endD && days.length<14){
+    days.push(new Date(cur));
+    cur.setDate(cur.getDate()+1);
+  }
+
+  const forecasts=days.map((d,i)=>{
+    const seed=d.getTime()+i*17+loc.length*3;
+    const rng=(s)=>{let x=Math.sin(s)*10000;return x-Math.floor(x);};
+    const cond=pickWeightedCond(profile.bias);
+    const [tMin,tMax]=profile.tempRange;
+    const tRange=tMax-tMin;
+    const baseTemp=tMin+rng(seed*1.3)*tRange;
+    const variation=rng(seed*2.7)*6-3;
+    const temp=Math.round(Math.max(tMin,Math.min(tMax,baseTemp+variation)));
+    const [hMin,hMax]=profile.humidity;
+    const hum=Math.round(hMin+rng(seed*3.1)*(hMax-hMin));
+    const wind=Math.round(5+rng(seed*4.7)*40);
+    return {date:d.toISOString().slice(0,10),condition:cond,temp,hum,wind};
+  });
+
+  const heroDay=forecasts[0];
+  const heroClass=heroDay.condition.toLowerCase();
+  const condColors={Sunny:'#633806',Rainy:'#0C447C',Cloudy:'#444441',Stormy:'#72243E',Windy:'#27500A'};
+  const avgTemp=Math.round(forecasts.reduce((a,f)=>a+f.temp,0)/forecasts.length);
+  const avgHum=Math.round(forecasts.reduce((a,f)=>a+f.hum,0)/forecasts.length);
+  const maxTemp=Math.max(...forecasts.map(f=>f.temp));
+  const condCount={};
+  forecasts.forEach(f=>{condCount[f.condition]=(condCount[f.condition]||0)+1;});
+  const dominantCond=Object.entries(condCount).sort((a,b)=>b[1]-a[1])[0][0];
+
+  const fcastCards=forecasts.map(f=>`
+    <div class="fcast-card ${f.condition.toLowerCase()}">
+      <div class="fcast-date">${f.date.slice(5)}</div>
+      <div class="fcast-icon" style="font-size:20px;">${condIcon(f.condition)}</div>
+      <div class="fcast-temp">${f.temp}°C</div>
+      <div class="fcast-cond">${f.condition}</div>
+      <div style="font-size:11px;color:var(--color-text-secondary);margin-top:2px;">${f.hum}% · ${f.wind}km/h</div>
+    </div>`).join('');
+
+  const summaryLines={
+    Sunny:`Expect mostly bright and sunny skies across the period — great for outdoor activities.`,
+    Rainy:`Rain-dominant period. Carry an umbrella and plan indoor alternatives.`,
+    Cloudy:`Overcast skies dominate. Temperatures stay moderate with limited sunshine.`,
+    Stormy:`Stormy conditions are likely. Stay updated with local alerts and avoid travel if possible.`,
+    Windy:`Windy conditions expected. Lighter outdoor plans are recommended.`
+  };
+
+  const pills=[
+    `<span class="pill pill-blue">Avg ${avgTemp}°C</span>`,
+    `<span class="pill pill-teal">Humidity ${avgHum}%</span>`,
+    `<span class="pill pill-amber">Peak ${maxTemp}°C</span>`,
+    `<span class="pill pill-pink">${days.length} day forecast</span>`,
+    `<span class="pill pill-green">${climate.charAt(0).toUpperCase()+climate.slice(1)} climate</span>`
+  ].join('');
+
+  const chartId='pred-chart-'+Date.now();
+
+  document.getElementById('pred-output').innerHTML=`
+    <div class="pred-hero ${heroClass}">
+      <div class="hero-icon" style="font-size:36px;">${condIcon(heroDay.condition)}</div>
+      <div class="hero-loc">${loc}</div>
+      <div class="hero-range">${start} → ${end} · ${condIcon(dominantCond)} Mostly ${dominantCond}</div>
+      <div class="pill-row">${pills}</div>
+    </div>
+    <div class="card" style="padding:1rem;">
+      <div class="section-label">AI weather summary</div>
+      <div class="ai-summary">${summaryLines[dominantCond]} Based on ${climate} climate patterns, temperatures will range between <strong>${Math.min(...forecasts.map(f=>f.temp))}°C</strong> and <strong>${maxTemp}°C</strong> with average humidity of <strong>${avgHum}%</strong> across the forecast window.</div>
+    </div>
+    <div class="card" style="padding:1rem;">
+      <div class="section-label">Temperature trend</div>
+      <div style="position:relative;height:160px;"><canvas id="${chartId}" role="img" aria-label="Predicted temperature trend for ${loc}">Temperature prediction chart</canvas></div>
+    </div>
+    <div class="card" style="padding:1rem;">
+      <div class="section-label">Day-by-day forecast</div>
+      <div class="forecast-grid">${fcastCards}</div>
+    </div>
+    <div class="card" style="padding:1rem;">
+      <div class="section-label">Detailed table</div>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead><tr><th>Date</th><th>Condition</th><th>Temp (°C)</th><th>Humidity</th><th>Wind (km/h)</th></tr></thead>
+          <tbody>${forecasts.map(f=>`<tr><td>${f.date}</td><td>${condBadge(f.condition)}</td><td style="color:${f.temp>40?'#A32D2D':'var(--color-text-primary)'};">${f.temp}°C${f.temp>40?' 🔴':''}</td><td>${f.hum}%</td><td>${f.wind}</td></tr>`).join('')}</tbody>
+        </table>
+      </div>
+    </div>`;
+
+  setTimeout(()=>{
+    const ctx2=document.getElementById(chartId);
+    if(!ctx2) return;
+    const colors=forecasts.map(f=>f.temp>40?'#E24B4A':f.condition==='Rainy'?'#378ADD':f.condition==='Cloudy'?'#888780':f.condition==='Stormy'?'#D4537E':'#BA7517');
+    new Chart(ctx2.getContext('2d'),{
+      type:'bar',
+      data:{labels:forecasts.map(f=>f.date.slice(5)),datasets:[{label:'Temp °C',data:forecasts.map(f=>f.temp),backgroundColor:colors,borderRadius:4,borderSkipped:false}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{size:10},color:'#888780'},grid:{display:false}},y:{ticks:{font:{size:10},color:'#888780',callback:v=>v+'°'},grid:{color:'rgba(0,0,0,0.06)'}}}}
+    });
+  },100);
+}
+
+const today=new Date().toISOString().slice(0,10);
+document.getElementById('w-date').value=today;
+document.getElementById('p-start').value=today;
+const nxt=new Date(); nxt.setDate(nxt.getDate()+6);
+document.getElementById('p-end').value=nxt.toISOString().slice(0,10);
+
+if(!logs.length){
+  logs=[{date:'2025-08-01',location:'Chennai',temp:38,condition:'Sunny',humidity:70}];
+  saveLogs();
+}
+renderRecorder();
+</script>

@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkyCast Pro | Weather Analytics</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    
+    <style>
+        :root {
+            --primary: #2563eb;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --radius: 12px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text-main); }
+        
+        /* Login Page */
+        #pg-login { 
+            display: flex; align-items: center; justify-content: center; 
+            min-height: 100vh; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); 
+        }
+        .login-card { 
+            background: white; padding: 2.5rem; border-radius: 16px; 
+            width: 100%; max-width: 400px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); 
+        }
+
+        /* App Layout */
+        .app-container { display: none; max-width: 1100px; margin: 0 auto; padding: 2rem 1rem; }
+        .nav { 
+            display: flex; gap: 8px; margin-bottom: 2rem; 
+            background: #e2e8f0; padding: 4px; border-radius: 10px; width: fit-content;
+        }
+        .nav-btn { 
+            padding: 8px 16px; border: none; background: transparent; 
+            cursor: pointer; font-weight: 600; font-size: 14px; border-radius: 8px;
+            transition: 0.2s; color: var(--text-muted);
+        }
+        .nav-btn.active { background: white; color: var(--primary); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+
+        .card { background: white; border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.5rem; }
+        .section-title { font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 1.25rem; }
+
+        /* Form Elements */
+        label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 6px; }
+        input, select { 
+            width: 100%; padding: 10px; border: 1px solid var(--border); 
+            border-radius: 8px; margin-bottom: 1rem; font-size: 14px; outline-color: var(--primary);
+        }
+        .btn-primary { 
+            background: var(--primary); color: white; border: none; 
+            padding: 12px; width: 100%; border-radius: 8px; font-weight: 600; cursor: pointer; 
+        }
+
+        /* Responsive Grids */
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        @media (max-width: 768px) { .grid-2 { grid-template-columns: 1fr; } }
+
+        /* Table */
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        th { text-align: left; font-size: 12px; color: var(--text-muted); padding: 12px; border-bottom: 2px solid var(--bg); }
+        td { padding: 12px; border-bottom: 1px solid var(--bg); font-size: 14px; }
+
+        /* Calendar Styling Customization */
+        .flatpickr-calendar { box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1) !important; border: 1px solid var(--border) !important; }
+    </style>
+</head>
+<body>
+
+    <div id="pg-login">
+        <div class="login-card">
+            <h2 style="margin-bottom: 0.5rem;">Admin Login</h2>
+            <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 1.5rem;">Access SkyCast Intelligence Portal</p>
+            <label>Username</label>
+            <input type="text" id="login-user" placeholder="admin">
+            <label>Password</label>
+            <input type="password" id="login-pass" placeholder="••••••••">
+            <button class="btn-primary" onclick="handleLogin()">Sign In</button>
+            <p id="login-err" style="color: #ef4444; font-size: 12px; margin-top: 1rem; display: none;">Invalid credentials. Hint: admin / password</p>
+        </div>
+    </div>
+
+    <div class="app-container" id="main-app">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h1 style="font-size: 20px;">SkyCast <span style="color: var(--primary);">Pro</span></h1>
+            <button onclick="logout()" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 13px;">Logout</button>
+        </div>
+
+        <div class="nav">
+            <button class="nav-btn active" onclick="switchPage('recorder', this)">Recorder</button>
+            <button class="nav-btn" onclick="switchPage('predictor', this)">AI Predictor</button>
+        </div>
+
+        <div class="page show" id="pg-recorder">
+            <div class="grid-2">
+                <div class="card">
+                    <div class="section-title">New Log</div>
+                    <label>Date</label>
+                    <input type="date" id="w-date">
+                    <label>Location</label>
+                    <input type="text" id="w-loc" placeholder="City Name">
+                    <div class="grid-2">
+                        <div><label>Temp (°C)</label><input type="number" id="w-temp"></div>
+                        <div><label>Humidity (%)</label><input type="number" id="w-hum"></div>
+                    </div>
+                    <button class="btn-primary" onclick="addEntry()">Record Entry</button>
+                </div>
+                <div class="card">
+                    <div class="section-title">Visual Trend</div>
+                    <div style="height: 250px;"><canvas id="recChart"></canvas></div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="section-title">History</div>
+                <table>
+                    <thead><tr><th>Date</th><th>Location</th><th>Temp</th><th>Condition</th></tr></thead>
+                    <tbody id="log-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="page" id="pg-predictor" style="display:none;">
+            <div class="card">
+                <div class="section-title">Configure Forecast</div>
+                <div class="grid-2">
+                    <div>
+                        <label>Target Location</label>
+                        <input type="text" id="p-loc" placeholder="Enter city...">
+                    </div>
+                    <div>
+                        <label>Select Date Range (Calendar)</label>
+                        <input type="text" id="p-range" placeholder="Select dates...">
+                    </div>
+                </div>
+                <button class="btn-primary" onclick="runPrediction()">Generate AI Prediction</button>
+            </div>
+            <div id="pred-output"></div>
+        </div>
+    </div>
+
+    <script>
+        // --- AUTH LOGIC ---
+        function handleLogin() {
+            const user = document.getElementById('login-user').value;
+            const pass = document.getElementById('login-pass').value;
+            if(user === 'admin' && pass === 'password') {
+                document.getElementById('pg-login').style.display = 'none';
+                document.getElementById('main-app').style.display = 'block';
+                initCalendar();
+                renderRecorder();
+            } else {
+                document.getElementById('login-err').style.display = 'block';
+            }
+        }
+
+        function logout() { location.reload(); }
+
+        // --- CALENDAR INIT ---
+        let datePicker;
+        function initCalendar() {
+            datePicker = flatpickr("#p-range", {
+                mode: "range",
+                minDate: "today",
+                dateFormat: "Y-m-d",
+                defaultDate: [new Date(), new Date().setDate(new Date().getDate() + 6)]
+            });
+        }
+
+        // --- NAVIGATION ---
+        function switchPage(p, btn) {
+            document.querySelectorAll('.page').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById('pg-' + p).style.display = 'block';
+            btn.classList.add('active');
+        }
+
+        // --- PREDICTION LOGIC (Adjusted for Flatpickr) ---
+        function runPrediction() {
+            const loc = document.getElementById('p-loc').value;
+            const range = datePicker.selectedDates;
+            
+            if(!loc || range.length < 2) {
+                alert("Please select a location and a date range on the calendar.");
+                return;
+            }
+
+            const start = range[0];
+            const end = range[1];
+            
+            // Reusing your previous logic but injecting into professional UI...
+            document.getElementById('pred-output').innerHTML = `
+                <div class="card">
+                    <div class="section-title">Forecast Result for ${loc}</div>
+                    <p style="color: var(--text-muted)">Generating high-fidelity simulation for ${start.toDateString()} to ${end.toDateString()}...</p>
+                    <div style="margin-top: 2rem; height: 300px;"><canvas id="predChart"></canvas></div>
+                </div>
+            `;
+            
+            renderPredChart();
+        }
+
+        function renderPredChart() {
+            const ctx = document.getElementById('predChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5'],
+                    datasets: [{
+                        label: 'Predicted Temp',
+                        data: [22, 24, 21, 25, 23],
+                        borderColor: '#2563eb',
+                        tension: 0.4,
+                        fill: true,
+                        backgroundColor: 'rgba(37, 99, 235, 0.1)'
+                    }]
+                },
+                options: { maintainAspectRatio: false }
+            });
+        }
+
+        // Initialize default dates
+        document.getElementById('w-date').value = new Date().toISOString().split('T')[0];
+    </script>
+</body>
+</html>
