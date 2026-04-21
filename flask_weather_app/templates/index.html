@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>SkyLog - Weather Recording System</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<div class="app" id="app">
+
+  <!-- AUTH -->
+  <div class="auth-wrap" id="authWrap">
+    <div class="auth-bg">
+      <div class="auth-blob" style="width:400px;height:400px;background:#0ea5e9;top:-100px;left:-100px"></div>
+      <div class="auth-blob" style="width:300px;height:300px;background:#8b5cf6;bottom:-50px;right:-50px"></div>
+      <div class="auth-blob" style="width:200px;height:200px;background:#f59e0b;top:50%;left:60%"></div>
+    </div>
+    <div class="auth-card">
+      <div class="auth-logo">
+        <span class="icon">⛅</span>
+        <h1>SkyLog</h1>
+        <p>Professional Weather Recording System</p>
+      </div>
+      <div class="auth-tabs">
+        <div class="auth-tab active" onclick="switchAuth('login')">Sign In</div>
+        <div class="auth-tab" onclick="switchAuth('register')">Register</div>
+      </div>
+      <div id="authErr" class="err-msg"></div>
+
+      <!-- LOGIN -->
+      <div id="loginForm">
+        <div class="field"><label>Email</label><input type="email" id="loginEmail" placeholder="you@example.com"></div>
+        <div class="field"><label>Password</label><input type="password" id="loginPass" placeholder="••••••••"></div>
+        <button class="btn-primary" onclick="doLogin()">Sign In to SkyLog</button>
+        <div class="auth-divider">Demo: any registered account</div>
+      </div>
+
+      <!-- REGISTER -->
+      <div id="registerForm" style="display:none">
+        <div class="field"><label>Full Name</label><input type="text" id="regName" placeholder="Jane Doe"></div>
+        <div class="field"><label>Email</label><input type="email" id="regEmail" placeholder="you@example.com"></div>
+        <div class="field"><label>Location</label><input type="text" id="regLocation" placeholder="Your city"></div>
+        <div class="field"><label>Password</label><input type="password" id="regPass" placeholder="Min 6 characters"></div>
+        <button class="btn-primary" onclick="doRegister()">Create Account</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN APP -->
+  <div id="mainApp" style="display:none;flex-direction:column;min-height:100vh">
+    <nav class="topnav">
+      <div class="brand"><span class="brand-icon">⛅</span>SkyLog</div>
+      <div class="nav-tabs">
+        <button class="nav-tab active" onclick="switchPage('dashboard',this)">🏠 Dashboard</button>
+        <button class="nav-tab" onclick="switchPage('predict',this)">🔮 Prediction</button>
+        <button class="nav-tab" onclick="switchPage('trips',this)">✈️ My Trips</button>
+      </div>
+      <div class="user-pill" onclick="doLogout()">
+        <div class="avatar" id="navAvatar">?</div>
+        <span class="user-name" id="navName">User</span>
+      </div>
+    </nav>
+
+    <!-- DASHBOARD PAGE -->
+    <div class="page active" id="dashboardPage">
+      <div style="padding:2rem;max-width:1400px;margin:0 auto;width:100%">
+        <div class="page-header">
+          <h2>🌤️ Weather Dashboard</h2>
+          <p>Today's conditions and your weather log history</p>
+        </div>
+
+        <!-- SEARCH BAR -->
+        <div class="search-bar">
+          <input type="text" id="locationSearch" placeholder="Search location for current weather..." value="Chennai">
+          <button onclick="fetchCurrentWeather()">Get Weather</button>
+        </div>
+
+        <!-- HERO -->
+        <div class="weather-hero" id="weatherHero">
+          <div class="weather-hero-bg">
+            <div class="hero-blob" style="width:300px;height:300px;background:#38bdf8;top:-100px;right:100px"></div>
+            <div class="hero-blob" style="width:200px;height:200px;background:#8b5cf6;bottom:-50px;left:200px"></div>
+          </div>
+          <div class="weather-hero-inner">
+            <div class="hero-left">
+              <div class="hero-location">📍 <span id="heroCity">Chennai</span></div>
+              <div class="hero-temp"><span id="heroTemp">--</span>°C</div>
+              <div class="hero-condition" id="heroCond">Loading...</div>
+              <div class="hero-stats">
+                <div class="hero-stat"><div class="hval" id="heroHum">--%</div><div class="hlbl">Humidity</div></div>
+                <div class="hero-stat"><div class="hval" id="heroWind">--</div><div class="hlbl">Wind km/h</div></div>
+                <div class="hero-stat"><div class="hval" id="heroFeel">--°C</div><div class="hlbl">Feels Like</div></div>
+              </div>
+            </div>
+            <div class="hero-right">
+              <div class="weather-emoji-big" id="heroEmoji">⛅</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STATS -->
+        <div class="stats-row" id="statsRow">
+          <div class="stat-card sky"><div class="bg-icon">🌡️</div><div class="label">7-Day Avg Temp</div><div class="value" id="stat7avg">--°</div><div class="sub">From recent logs</div></div>
+          <div class="stat-card sun"><div class="bg-icon">☀️</div><div class="label">Total Logs</div><div class="value" id="statTotal">0</div><div class="sub">Weather entries</div></div>
+          <div class="stat-card rain"><div class="bg-icon">💧</div><div class="label">Avg Humidity</div><div class="value" id="statHum">--%</div><div class="sub">Across all logs</div></div>
+          <div class="stat-card green"><div class="bg-icon">🌡️</div><div class="label">Max Temp</div><div class="value" id="statMax">--°</div><div class="sub">Hottest recorded</div></div>
+        </div>
+
+        <!-- 7-DAY AVG BANNER -->
+        <div class="avg-banner" id="avgBanner" style="display:none">
+          <div class="avg-icon">📊</div>
+          <div>
+            <div class="avg-num" id="avgNum">--°C</div>
+            <div class="avg-lbl">7-Day Average Temperature (last 7 records)</div>
+          </div>
+        </div>
+
+        <div class="grid2">
+          <!-- LOG FORM -->
+          <div class="card">
+            <div class="card-title"><span class="icon">➕</span> Log Weather Entry</div>
+            <div class="form-grid">
+              <div class="form-field"><label>Date</label><input type="date" id="logDate"></div>
+              <div class="form-field"><label>Location</label><input type="text" id="logLocation" placeholder="City"></div>
+              <div class="form-field"><label>Temperature (°C)</label><input type="number" id="logTemp" placeholder="e.g. 34"></div>
+              <div class="form-field"><label>Condition</label>
+                <select id="logCondition">
+                  <option value="Sunny">☀️ Sunny</option>
+                  <option value="Rainy">🌧️ Rainy</option>
+                  <option value="Cloudy">☁️ Cloudy</option>
+                </select>
+              </div>
+              <div class="form-field" style="grid-column:1/-1"><label>Humidity (%)</label><input type="number" id="logHumidity" placeholder="e.g. 65" min="0" max="100"></div>
+            </div>
+            <button class="btn-add" onclick="addLog()">➕ Add Weather Log</button>
+          </div>
+
+          <!-- TEMP CHART -->
+          <div class="card">
+            <div class="card-title"><span class="icon">📈</span> Temperature Trend</div>
+            <div class="chart-wrap"><canvas id="tempChart" role="img" aria-label="Temperature trend from recent weather logs">Temperature trend chart</canvas></div>
+          </div>
+        </div>
+
+        <!-- CONDITION CHART ROW -->
+        <div class="grid2" style="margin-bottom:2rem">
+          <div class="card">
+            <div class="card-title"><span class="icon">🌤️</span> Conditions Breakdown</div>
+            <div class="chart-wrap"><canvas id="condChart" role="img" aria-label="Weather condition distribution">Conditions chart</canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-title"><span class="icon">💧</span> Humidity Trend</div>
+            <div class="chart-wrap"><canvas id="humChart" role="img" aria-label="Humidity trend chart">Humidity chart</canvas></div>
+          </div>
+        </div>
+
+        <!-- LOG TABLE -->
+        <div class="card">
+          <div class="card-title"><span class="icon">📋</span> Weather Log History</div>
+          <div class="table-wrap">
+            <table id="logTable">
+              <thead><tr><th>Date</th><th>Location</th><th>Temp</th><th>Condition</th><th>Humidity</th><th>Status</th></tr></thead>
+              <tbody id="logTbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PREDICT PAGE -->
+    <div class="page" id="predictPage">
+      <div style="padding:2rem;max-width:1400px;margin:0 auto;width:100%">
+        <div class="page-header">
+          <h2>🔮 Weather Prediction</h2>
+          <p>Plan your trips with AI-powered weather forecasts</p>
+        </div>
+
+        <div class="pred-hero">
+          <h3>Trip Weather Planner</h3>
+          <p>Select a destination and pick dates on the calendar to get predicted weather conditions</p>
+        </div>
+
+        <div class="grid2">
+          <div class="card">
+            <div class="card-title"><span class="icon">📍</span> Destination & Calendar</div>
+            <div class="form-field" style="margin-bottom:1rem"><label>Destination City</label><input type="text" id="predCity" placeholder="Enter city name" value="Mumbai"></div>
+            <div style="margin-bottom:1rem">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem">
+                <button onclick="prevMonth()" style="background:#f1f5f9;border:none;padding:6px 12px;border-radius:8px;cursor:pointer;font-size:1rem">←</button>
+                <span style="font-weight:700;font-size:1rem" id="calMonthLabel">Month Year</span>
+                <button onclick="nextMonth()" style="background:#f1f5f9;border:none;padding:6px 12px;border-radius:8px;cursor:pointer;font-size:1rem">→</button>
+              </div>
+              <div class="cal-header" id="calDays"></div>
+              <div class="cal-grid" id="calGrid"></div>
+            </div>
+            <div style="font-size:13px;color:var(--muted);margin-bottom:1rem">
+              Selected: <span id="selectedDatesLabel" style="font-weight:600;color:var(--sky1)">None</span>
+            </div>
+            <button class="btn-add" onclick="getPrediction()">🔮 Get Weather Prediction</button>
+          </div>
+
+          <div class="card" id="predResultCard">
+            <div class="card-title"><span class="icon">📅</span> Forecast Results</div>
+            <div id="predResults">
+              <div class="no-data">
+                <div class="icon">🌍</div>
+                <p>Select a city and dates to see the forecast</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRIPS PAGE -->
+    <div class="page" id="tripsPage">
+      <div style="padding:2rem;max-width:1400px;margin:0 auto;width:100%;position:relative">
+        <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem">
+          <div>
+            <h2>✈️ My Trips</h2>
+            <p>Manage all your planned travel itineraries</p>
+          </div>
+          <button class="btn-add" style="width:auto;margin:0" onclick="openTripModal()">➕ New Trip</button>
+        </div>
+
+        <!-- TRIP MODAL -->
+        <div class="modal-overlay" id="tripModal">
+          <div class="modal-box">
+            <button class="modal-close" onclick="closeTripModal()">✕</button>
+            <div class="modal-title">Plan New Trip</div>
+            <div class="form-field" style="margin-bottom:.75rem"><label>Trip Name</label><input type="text" id="tripName" placeholder="e.g. Goa Beach Getaway"></div>
+            <div class="form-field" style="margin-bottom:.75rem"><label>Destination</label><input type="text" id="tripDest" placeholder="City, Country"></div>
+            <div class="form-grid" style="margin-bottom:.75rem">
+              <div class="form-field"><label>Start Date</label><input type="date" id="tripStart"></div>
+              <div class="form-field"><label>End Date</label><input type="date" id="tripEnd"></div>
+            </div>
+            <div class="form-field" style="margin-bottom:.75rem"><label>Trip Type</label>
+              <select id="tripType">
+                <option value="Beach">🏖️ Beach</option><option value="Mountain">⛰️ Mountain</option>
+                <option value="City">🏙️ City</option><option value="Adventure">🧗 Adventure</option>
+                <option value="Cultural">🏛️ Cultural</option><option value="Wildlife">🦁 Wildlife</option>
+              </select>
+            </div>
+            <div class="form-field" style="margin-bottom:1.25rem"><label>Expected Condition</label>
+              <select id="tripCondition">
+                <option value="Sunny">☀️ Sunny</option><option value="Rainy">🌧️ Rainy</option><option value="Cloudy">☁️ Cloudy</option>
+              </select>
+            </div>
+            <button class="btn-primary" onclick="saveTrip()">Save Trip</button>
+          </div>
+        </div>
+
+        <div id="tripsGrid" class="grid3"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
